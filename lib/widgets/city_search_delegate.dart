@@ -14,7 +14,7 @@ class CitySearchDelegate extends SearchDelegate<String> {
 
     return theme.copyWith(
       appBarTheme: AppBarTheme(
-        backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+        backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
         elevation: 0,
         iconTheme: IconThemeData(
           color: isDark ? Colors.white : const Color(0xFF1E293B),
@@ -80,7 +80,7 @@ class CitySearchDelegate extends SearchDelegate<String> {
 
   Widget _buildSimilarCitiesView(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF0F9FF);
+    final Color bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
     final Color textColor = isDark ? Colors.white : const Color(0xFF1E293B);
     final Color subtitleColor = isDark ? Colors.white54 : const Color(0xFF475569);
     final Color dividerColor = isDark ? Colors.white10 : Colors.black12;
@@ -166,7 +166,7 @@ class CitySearchDelegate extends SearchDelegate<String> {
               Expanded(
                 child: ListView.separated(
                   itemCount: cities.length,
-                  separatorBuilder: (_, __) => Divider(
+                  separatorBuilder: (_, _) => Divider(
                     height: 1,
                     color: dividerColor,
                     indent: 60,
@@ -239,7 +239,7 @@ class CitySearchDelegate extends SearchDelegate<String> {
             .where((s) => s.toLowerCase().contains(query.toLowerCase()))
             .toList();
 
-    final Color bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF0F9FF);
+    final Color bgColor = isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
     final Color textColor = isDark ? Colors.white : const Color(0xFF1E293B);
     final Color subtitleColor = isDark ? Colors.white54 : const Color(0xFF475569);
     final Color dividerColor = isDark ? Colors.white10 : Colors.black12;
@@ -282,7 +282,7 @@ class CitySearchDelegate extends SearchDelegate<String> {
             Expanded(
               child: ListView.separated(
                 itemCount: suggestions.length,
-                separatorBuilder: (_, __) => Divider(
+                separatorBuilder: (_, _) => Divider(
                   height: 1,
                   color: dividerColor,
                   indent: 60,

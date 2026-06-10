@@ -65,20 +65,30 @@ class WeatherService {
     double precipitation = 0.0;
     double rainProbability = 0.0;
     String symbolCode = 'clearsky_day'; // fallback
+    bool hasExplicitProbability = false;
 
     final Map<String, dynamic>? next1Hour = currentData['next_1_hours'];
     if (next1Hour != null) {
       precipitation = _toDouble(next1Hour['details']?['precipitation_amount']);
-      rainProbability = _toDouble(next1Hour['details']?['probability_of_precipitation']);
+      final dynamic rawProb = next1Hour['details']?['probability_of_precipitation'];
+      hasExplicitProbability = rawProb != null;
+      rainProbability = _toDouble(rawProb);
       symbolCode = next1Hour['summary']?['symbol_code'] ?? symbolCode;
     } else {
       // Try next 6 hours if next 1 hour is null (unlikely for current point)
       final Map<String, dynamic>? next6Hour = currentData['next_6_hours'];
       if (next6Hour != null) {
         precipitation = _toDouble(next6Hour['details']?['precipitation_amount']);
-        rainProbability = _toDouble(next6Hour['details']?['probability_of_precipitation']);
+        final dynamic rawProb = next6Hour['details']?['probability_of_precipitation'];
+        hasExplicitProbability = rawProb != null;
+        rainProbability = _toDouble(rawProb);
         symbolCode = next6Hour['summary']?['symbol_code'] ?? symbolCode;
       }
+    }
+
+    // If no explicit probability from API, estimate from symbol_code and precipitation_amount
+    if (!hasExplicitProbability) {
+      rainProbability = _estimateProbabilityFromSymbol(symbolCode, precipitation);
     }
 
     final String conditionText = WeatherIconMapper.getConditionDescription(symbolCode);
@@ -97,19 +107,29 @@ class WeatherService {
       double prec = 0.0;
       double prob = 0.0;
       String sym = 'clearsky_day';
+      bool hHasExplicitProb = false;
 
       final Map<String, dynamic>? hNext1Hour = pData['next_1_hours'];
       if (hNext1Hour != null) {
         prec = _toDouble(hNext1Hour['details']?['precipitation_amount']);
-        prob = _toDouble(hNext1Hour['details']?['probability_of_precipitation']);
+        final dynamic hRawProb = hNext1Hour['details']?['probability_of_precipitation'];
+        hHasExplicitProb = hRawProb != null;
+        prob = _toDouble(hRawProb);
         sym = hNext1Hour['summary']?['symbol_code'] ?? sym;
       } else {
         final Map<String, dynamic>? hNext6Hour = pData['next_6_hours'];
         if (hNext6Hour != null) {
           prec = _toDouble(hNext6Hour['details']?['precipitation_amount']) / 6.0; // average hourly
-          prob = _toDouble(hNext6Hour['details']?['probability_of_precipitation']);
+          final dynamic hRawProb = hNext6Hour['details']?['probability_of_precipitation'];
+          hHasExplicitProb = hRawProb != null;
+          prob = _toDouble(hRawProb);
           sym = hNext6Hour['summary']?['symbol_code'] ?? sym;
         }
+      }
+
+      // If no explicit probability from API, estimate from symbol_code
+      if (!hHasExplicitProb) {
+        prob = _estimateProbabilityFromSymbol(sym, prec);
       }
 
       hourlyForecasts.add(HourlyForecast(
@@ -163,11 +183,18 @@ class WeatherService {
         // Sum precipitation and find max probability in the 6-hour blocks
         final Map<String, dynamic>? next6h = dataBlock['next_6_hours'];
         if (next6h != null) {
-          totalPrec += _toDouble(next6h['details']?['precipitation_amount']);
-          final double prob = _toDouble(next6h['details']?['probability_of_precipitation']);
+          final double precAmt = _toDouble(next6h['details']?['precipitation_amount']);
+          totalPrec += precAmt;
+          final dynamic dRawProb = next6h['details']?['probability_of_precipitation'];
+          double prob = _toDouble(dRawProb);
+          final String? code = next6h['summary']?['symbol_code'];
+          
+          // If no explicit probability, estimate from symbol
+          if (dRawProb == null && code != null) {
+            prob = _estimateProbabilityFromSymbol(code, precAmt);
+          }
           if (prob > maxProb) maxProb = prob;
 
-          final String? code = next6h['summary']?['symbol_code'];
           if (code != null) {
             symbolCount[code] = (symbolCount[code] ?? 0) + 1;
           }
@@ -218,6 +245,73 @@ class WeatherService {
     if (val == null) return 0.0;
     if (val is int) return val.toDouble();
     if (val is double) return val;
+    return 0.0;
+  }
+
+  /// Estimates precipitation probability from the MET Norway symbol_code.
+  /// The API only provides explicit probability_of_precipitation for Nordic regions.
+  /// For the rest of the world, we derive a reasonable estimate from the weather symbol
+  /// and precipitation amount.
+  double _estimateProbabilityFromSymbol(String symbolCode, double precipitationAmount) {
+    final String code = symbolCode.toLowerCase();
+
+    // Heavy precipitation symbols → high probability
+    if (code.contains('heavyrain') || code.contains('heavysnow') || code.contains('heavysleet')) {
+      return 90.0;
+    }
+
+    // Thunder symbols → high probability
+    if (code.contains('thunder')) {
+      return 80.0;
+    }
+
+    // Regular rain/snow/sleet (not "light" or "heavy")
+    if (code == 'rain' ||
+        code.startsWith('rain_') ||
+        code.contains('rainshowers') ||
+        code == 'snow' ||
+        code.startsWith('snow_') ||
+        code.contains('snowshowers') ||
+        code == 'sleet' ||
+        code.startsWith('sleet_') ||
+        code.contains('sleetshowers')) {
+      return 65.0;
+    }
+
+    // Light precipitation symbols → moderate probability
+    if (code.contains('lightrain') || code.contains('lightsnow') || code.contains('lightsleet')) {
+      return 40.0;
+    }
+
+    // Foggy conditions → slight chance
+    if (code.contains('fog')) {
+      return 15.0;
+    }
+
+    // Cloudy/partly cloudy → low probability
+    if (code.contains('cloudy') || code.contains('partlycloudy')) {
+      // If there's actual precipitation amount despite cloudy symbol, bump it up
+      if (precipitationAmount > 0) {
+        return 35.0;
+      }
+      return 10.0;
+    }
+
+    // Fair weather → very low
+    if (code.contains('fair')) {
+      return 5.0;
+    }
+
+    // Clear sky → essentially zero
+    if (code.contains('clearsky')) {
+      return 0.0;
+    }
+
+    // Fallback: if there's precipitation amount, give a moderate probability
+    if (precipitationAmount > 0) {
+      return 50.0;
+    }
+
     return 0.0;
   }
 }

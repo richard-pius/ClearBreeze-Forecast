@@ -23,16 +23,17 @@ class GlassmorphicCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // In dark mode: white-tinted glass. In light mode: darker frosted glass
+    // Dark mode: subtle white-tinted glass with gentle blur
+    // Light mode: frosted white glass with stronger opacity for readability
     final Color fillColor = isDark
         ? Colors.white.withValues(alpha: fillOpacity)
-        : Colors.white.withValues(alpha: 0.75); // Darker frosted glass for light mode contrast
+        : Colors.white.withValues(alpha: 0.72);
     final Color borderColor = isDark
         ? Colors.white.withValues(alpha: borderOpacity)
-        : Colors.white.withValues(alpha: 0.85);
+        : Colors.white.withValues(alpha: 0.80);
     final Color shadowColor = isDark
-        ? Colors.black.withValues(alpha: 0.05)
-        : Colors.black.withValues(alpha: 0.06);
+        ? Colors.black.withValues(alpha: 0.08)
+        : Colors.black.withValues(alpha: 0.05);
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(borderRadius),
@@ -49,8 +50,8 @@ class GlassmorphicCard extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color: shadowColor,
-                blurRadius: 10,
-                spreadRadius: 2,
+                blurRadius: 12,
+                spreadRadius: 1,
                 offset: const Offset(0, 4),
               ),
             ],

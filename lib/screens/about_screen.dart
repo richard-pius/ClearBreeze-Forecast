@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../config/constants.dart';
 import '../config/theme.dart';
 import '../providers/theme_provider.dart';
 import '../widgets/glassmorphic_card.dart';
+import '../widgets/gradient_background.dart';
 
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
@@ -29,7 +31,6 @@ class AboutScreen extends StatelessWidget {
     final Color mutedTextColor = isDark
         ? const Color(0x80FFFFFF)
         : const Color(0xFF64748B); // Slate 500
-    final List<Color> bgGradient = isDark ? AppTheme.bgNight : AppTheme.bgNightLight;
     final Color dividerColor = isDark ? Colors.white10 : Colors.black12;
 
     return Scaffold(
@@ -43,14 +44,8 @@ class AboutScreen extends StatelessWidget {
         elevation: 0,
         iconTheme: IconThemeData(color: primaryTextColor),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: bgGradient,
-          ),
-        ),
+      body: GradientBackground(
+        symbolCode: 'clearsky_day',
         child: SafeArea(
           child: ListView(
             padding: const EdgeInsets.all(20.0),
@@ -92,7 +87,7 @@ class AboutScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      'Version 1.0.0',
+                      'Version ${Constants.appVersion}',
                       style: TextStyle(color: mutedTextColor, fontSize: 13),
                     ),
                     const SizedBox(height: 25),
@@ -214,7 +209,7 @@ class AboutScreen extends StatelessWidget {
                   showLicensePage(
                     context: context,
                     applicationName: 'ClearBreeze Forecast',
-                    applicationVersion: '1.0.0',
+                    applicationVersion: Constants.appVersion,
                     applicationIcon: const Padding(
                       padding: EdgeInsets.all(12.0),
                       child: Text('💨', style: TextStyle(fontSize: 40)),

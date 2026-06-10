@@ -23,7 +23,7 @@ subprojects {
                         plugins.hasPlugin("com.android.library")
         if (isAndroid) {
             configure<com.android.build.gradle.BaseExtension> {
-                compileSdkVersion(34)
+                compileSdkVersion(35)
             }
         }
     }
