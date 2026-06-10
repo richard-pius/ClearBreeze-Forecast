@@ -1,18 +1,20 @@
 # ClearBreeze Forecast 💨
 
-ClearBreeze Forecast is a premium, 100% free, and open-source weather and air quality monitoring application built with Flutter and Dart. Designed with a gorgeous theme-aware glassmorphic UI, it delivers real-time meteorological forecasts and local air quality parameters to keep you informed.
+ClearBreeze Forecast is a premium, 100% free, and open-source weather and air quality monitoring application built with Flutter and Dart. Designed with a gorgeous theme-aware glassmorphic UI and time-of-day adaptive backgrounds, it delivers real-time meteorological forecasts and local air quality parameters to keep you informed.
 
 ---
 
 ## ✨ Features
 
+*   **🌅 Time-of-Day Adaptive Background**: The app background dynamically shifts based on the actual time of day — dawn, morning, afternoon, golden hour, dusk, and night — each with handcrafted gradient palettes for both light and dark themes. Weather conditions (rain, snow, fog, clouds) overlay on top for an immersive, living atmosphere.
 *   **🔍 Matching Similar Cities Search**: Type any city or area name, and the app will query the geocoder to show a list of similar matches worldwide (e.g. *London, Ontario, Canada* or *London, England, United Kingdom*). Tapping any matching city loads the weather directly from coordinates.
-*   **🌓 Animated Light/Dark Mode**: A smooth sun/moon rotation and fade toggle changes the interface theme instantly. The selection is saved to persistent storage (`SharedPreferences`).
+*   **🌓 Animated Light/Dark Mode**: A smooth sun/moon rotation and fade toggle changes the interface theme instantly. Both themes are carefully tuned for eye-friendly readability. The selection is saved to persistent storage (`SharedPreferences`).
 *   **🌡️ Temperature Unit Toggle**: Instantly switch between Celsius (°C) and Fahrenheit (°F).
-*   **💨 Glassmorphic Design**: Clean layouts using glassmorphic frosted cards, animated gauges, loading shimmers, and weather-aware background gradients that change according to current conditions (e.g. clear sky, cloudy, rainy, snow, and night).
-*   **📊 Comprehensive Weather Metrics**: Real-time reports for temperature, wind speed and cardinal direction, humidity, barometric pressure, hourly forecasts, and rain probability.
-*   **🍃 Air Quality Index (AQI)**: Accurate AQI readings calculated using EPA standards from PM2.5 and PM10 metrics, complete with radial status gauges and a list of nearby monitoring stations.
-*   **🗺️ GPS Location Fetching**: One-tap initialization loads weather details from your exact current location.
+*   **💨 Glassmorphic Design**: Clean layouts using glassmorphic frosted cards with optimised contrast ratios, animated gauges, loading shimmers, and weather-aware styling that adapts to current conditions.
+*   **🌧️ Smart Rain Probability**: Intelligent precipitation estimation that works globally — when the API doesn't provide explicit probability data (outside Nordic regions), the app derives accurate estimates from weather symbol codes and precipitation amounts.
+*   **📊 Comprehensive Weather Metrics**: Real-time reports for temperature, feels-like temperature, wind speed and cardinal direction, humidity, barometric pressure, hourly forecasts, and rain probability with a visual progress bar.
+*   **🍃 Air Quality Index (AQI)**: Accurate AQI readings calculated using EPA standards from PM2.5 and PM10 metrics, complete with animated radial gauges and nearby monitoring station info.
+*   **🗺️ GPS Location Fetching**: One-tap initialisation loads weather details from your exact current location.
 
 ---
 
