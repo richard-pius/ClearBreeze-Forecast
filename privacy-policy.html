@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy — ClearBreeze Forecast</title>
+    <meta name="description" content="Privacy Policy for ClearBreeze Forecast, a weather and air quality app by Richard Pius.">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d27;
+            --bg-card: #222639;
+            --text-primary: #e8eaed;
+            --text-secondary: #9aa0a6;
+            --text-muted: #6b7280;
+            --accent: #7aa2f7;
+            --accent-dim: #3d5a9e;
+            --border: #2e3347;
+            --radius: 12px;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            font-size: 16px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: #a9c4fa;
+            text-decoration: underline;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 3rem 1.5rem 2.5rem;
+            text-align: center;
+        }
+
+        .header__app-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .header__title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .header__meta {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .header__meta strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* ── Main container ── */
+        .container {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+
+        /* ── Intro paragraph ── */
+        .intro {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.5rem 1.75rem;
+            margin-bottom: 2.5rem;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .intro p + p {
+            margin-top: 0.75rem;
+        }
+
+        /* ── Sections ── */
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section__heading {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--accent-dim);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section__heading .icon {
+            font-size: 1.25rem;
+        }
+
+        .section p {
+            color: var(--text-secondary);
+            margin-bottom: 0.85rem;
+        }
+
+        .section p:last-child {
+            margin-bottom: 0;
+        }
+
+        .section ul {
+            list-style: none;
+            padding: 0;
+            margin: 0.5rem 0 1rem;
+        }
+
+        .section ul li {
+            position: relative;
+            padding-left: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .section ul li::before {
+            content: '•';
+            position: absolute;
+            left: 0.25rem;
+            color: var(--accent);
+            font-weight: 700;
+        }
+
+        .section strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        /* ── Highlight box ── */
+        .highlight-box {
+            background-color: var(--bg-card);
+            border-left: 3px solid var(--accent);
+            border-radius: 0 var(--radius) var(--radius) 0;
+            padding: 1.15rem 1.5rem;
+            margin: 1rem 0;
+            font-size: 0.93rem;
+        }
+
+        /* ── Table for third-party services ── */
+        .services-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.9rem;
+        }
+
+        .services-table th,
+        .services-table td {
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .services-table th {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.8rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .services-table td {
+            color: var(--text-secondary);
+        }
+
+        .services-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .services-table tbody tr {
+            transition: background-color 0.15s ease;
+        }
+
+        .services-table tbody tr:hover {
+            background-color: var(--bg-card);
+        }
+
+        /* ── Footer ── */
+        .footer {
+            text-align: center;
+            padding: 2rem 1.5rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.82rem;
+        }
+
+        .footer a {
+            color: var(--text-secondary);
+        }
+
+        .footer p + p {
+            margin-top: 0.35rem;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 600px) {
+            .header {
+                padding: 2rem 1rem 1.75rem;
+            }
+
+            .header__title {
+                font-size: 1.65rem;
+            }
+
+            .container {
+                padding: 1.75rem 1rem 3rem;
+            }
+
+            .section__heading {
+                font-size: 1.15rem;
+            }
+
+            .services-table th,
+            .services-table td {
+                padding: 0.6rem 0.65rem;
+                font-size: 0.82rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header__app-name">ClearBreeze Forecast</div>
+        <h1 class="header__title">Privacy Policy</h1>
+        <p class="header__meta"><strong>Effective Date:</strong> June 26, 2026</p>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+
+        <!-- Introduction -->
+        <div class="intro">
+            <p>
+                Richard Pius ("Developer", "we", "us", or "our") built <strong>ClearBreeze Forecast</strong> as a free,
+                open-source application licensed under the MIT License. This Privacy Policy explains how the app handles
+                information when you use our Service.
+            </p>
+            <p>
+                By using ClearBreeze Forecast, you agree to the practices described in this policy. If you do not agree
+                with this policy, please do not use the app.
+            </p>
+        </div>
+
+        <!-- 1. Information We Collect -->
+        <section class="section" id="information-we-collect">
+            <h2 class="section__heading"><span class="icon">📍</span> 1. Information We Collect</h2>
+            <p>
+                ClearBreeze Forecast is designed with privacy as a core principle. We minimize data collection to only
+                what is strictly necessary to deliver weather forecasts and air quality information.
+            </p>
+
+            <p><strong>Location Data</strong></p>
+            <p>
+                The app requests access to your device's location (precise and/or approximate) solely to determine
+                your geographic coordinates for fetching locally relevant weather and air quality data. This location
+                data is:
+            </p>
+            <ul>
+                <li>Used <strong>in real-time only</strong> to make API requests for your area</li>
+                <li><strong>Never transmitted</strong> to any server owned or operated by us</li>
+                <li><strong>Never stored</strong> on any remote server or database</li>
+                <li><strong>Never shared</strong> with any third party for advertising, analytics, or any other purpose</li>
+            </ul>
+
+            <p><strong>Data We Do NOT Collect</strong></p>
+            <p>We want to be unambiguous about what we do <em>not</em> collect:</p>
+            <ul>
+                <li>Personal information (name, email address, phone number, etc.)</li>
+                <li>Device identifiers or advertising IDs</li>
+                <li>Usage or behavioral analytics</li>
+                <li>Crash reports or diagnostics sent to our servers</li>
+                <li>Cookies or tracking technologies</li>
+                <li>Account credentials (no login or account system exists)</li>
+            </ul>
+        </section>
+
+        <!-- 2. How We Use Information -->
+        <section class="section" id="how-we-use-information">
+            <h2 class="section__heading"><span class="icon">⚙️</span> 2. How We Use Information</h2>
+            <p>Your location data is used exclusively for the following purposes:</p>
+            <ul>
+                <li>
+                    <strong>Weather Forecasts:</strong> Your coordinates are sent to the MET Norway Weather API
+                    (<a href="https://api.met.no" target="_blank" rel="noopener">api.met.no</a>) to retrieve weather
+                    forecast data for your location.
+                </li>
+                <li>
+                    <strong>Air Quality Data:</strong> Your coordinates are sent to the OpenAQ API
+                    (<a href="https://api.openaq.org" target="_blank" rel="noopener">api.openaq.org</a>) to retrieve
+                    air quality measurements near your location.
+                </li>
+            </ul>
+            <div class="highlight-box">
+                Your coordinates are transmitted directly from your device to these third-party APIs over encrypted
+                (HTTPS) connections. The Developer does not operate any intermediary server and does not have access
+                to, intercept, or log these requests.
+            </div>
+        </section>
+
+        <!-- 3. Data Storage -->
+        <section class="section" id="data-storage">
+            <h2 class="section__heading"><span class="icon">💾</span> 3. Data Storage</h2>
+            <p>
+                ClearBreeze Forecast caches weather and air quality data <strong>locally on your device</strong> using
+                the platform's shared preferences storage mechanism. This cached data:
+            </p>
+            <ul>
+                <li>Remains entirely on your device and is never uploaded to any server</li>
+                <li>Is used to improve app performance and reduce redundant network requests</li>
+                <li>Can be cleared at any time by clearing the app's data or cache through your device settings</li>
+                <li>Is automatically removed when you uninstall the app</li>
+            </ul>
+            <p>
+                We do not operate any backend servers, cloud databases, or remote storage systems. All data processing
+                happens locally on your device.
+            </p>
+        </section>
+
+        <!-- 4. Third-Party Services -->
+        <section class="section" id="third-party-services">
+            <h2 class="section__heading"><span class="icon">🔗</span> 4. Third-Party Services</h2>
+            <p>
+                The app communicates with the following third-party APIs to provide its core functionality. These
+                services have their own privacy policies governing how they handle data received through API requests:
+            </p>
+
+            <table class="services-table">
+                <thead>
+                    <tr>
+                        <th>Service</th>
+                        <th>Purpose</th>
+                        <th>Privacy Policy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>MET Norway Weather API</strong></td>
+                        <td>Weather forecast data</td>
+                        <td><a href="https://www.met.no/en/About-us/privacy" target="_blank" rel="noopener">met.no/privacy</a></td>
+                    </tr>
+                    <tr>
+                        <td><strong>OpenAQ API</strong></td>
+                        <td>Air quality measurements</td>
+                        <td><a href="https://openaq.org/privacy/" target="_blank" rel="noopener">openaq.org/privacy</a></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <p>
+                We encourage you to review the privacy policies of these third-party services. We are not responsible
+                for the data practices of these external providers. Note that when your device sends location
+                coordinates to these APIs, the providers may process that data according to their own policies.
+            </p>
+
+            <div class="highlight-box">
+                ClearBreeze Forecast does <strong>not</strong> integrate any advertising SDKs, analytics frameworks
+                (such as Google Analytics or Firebase Analytics), social media plugins, or any other third-party
+                tracking technologies.
+            </div>
+        </section>
+
+        <!-- 5. Data Sharing -->
+        <section class="section" id="data-sharing">
+            <h2 class="section__heading"><span class="icon">🚫</span> 5. Data Sharing</h2>
+            <p>
+                We do not sell, trade, rent, or otherwise share any user data with third parties. Since we do not
+                collect personal data, there is no personal data to share.
+            </p>
+            <p>
+                The only data transmission that occurs is the sending of your device's coordinates directly to the
+                MET Norway and OpenAQ APIs for the sole purpose of fetching weather and air quality information, as
+                described above.
+            </p>
+        </section>
+
+        <!-- 6. Your Rights (GDPR & Global) -->
+        <section class="section" id="your-rights">
+            <h2 class="section__heading"><span class="icon">🛡️</span> 6. Your Rights</h2>
+            <p>
+                Under the General Data Protection Regulation (GDPR) and similar data protection laws worldwide,
+                you have certain rights regarding your personal data. Because ClearBreeze Forecast does not collect,
+                store, or process personal data on any server, most of these rights are inherently satisfied:
+            </p>
+            <ul>
+                <li>
+                    <strong>Right of Access &amp; Portability:</strong> No personal data is stored on our systems,
+                    so there is no data to access or export.
+                </li>
+                <li>
+                    <strong>Right to Erasure:</strong> You can clear all locally cached data by clearing the app's
+                    storage in your device settings, or by uninstalling the app.
+                </li>
+                <li>
+                    <strong>Right to Restrict Processing:</strong> You can revoke location permission at any time
+                    through your device's settings to stop the app from accessing your location.
+                </li>
+                <li>
+                    <strong>Right to Object:</strong> Since we do not process data for profiling, marketing, or
+                    any purpose beyond providing weather information, this right is inherently respected.
+                </li>
+            </ul>
+            <p>
+                <strong>Legal Basis for Processing (GDPR Article 6):</strong> When you grant location permission,
+                the legal basis for processing your location data is your <strong>explicit consent</strong>. You
+                may withdraw this consent at any time by disabling location permissions for the app in your device
+                settings.
+            </p>
+        </section>
+
+        <!-- 7. Data Security -->
+        <section class="section" id="data-security">
+            <h2 class="section__heading"><span class="icon">🔒</span> 7. Data Security</h2>
+            <p>
+                We take reasonable measures to ensure your data is handled securely:
+            </p>
+            <ul>
+                <li>All network communication with third-party APIs uses encrypted HTTPS connections</li>
+                <li>No personal data is transmitted to or stored on any server operated by us</li>
+                <li>Locally cached data is stored using the platform's standard secure storage mechanisms</li>
+                <li>The app's source code is publicly available for inspection under the MIT License</li>
+            </ul>
+            <p>
+                While no method of electronic transmission or local storage is 100% secure, the app's architecture
+                — with no backend server and no data collection — minimizes potential security risks.
+            </p>
+        </section>
+
+        <!-- 8. Children's Privacy -->
+        <section class="section" id="childrens-privacy">
+            <h2 class="section__heading"><span class="icon">👦</span> 8. Children's Privacy</h2>
+            <p>
+                ClearBreeze Forecast is suitable for users of all ages (13+). The app does not knowingly collect
+                personal information from anyone, including children under the age of 13.
+            </p>
+            <p>
+                Since the app does not collect, store, or transmit any personal data to external servers, it
+                complies with the Children's Online Privacy Protection Act (COPPA) and similar regulations.
+                No user accounts, chat features, or social interactions exist within the app.
+            </p>
+            <p>
+                If you are a parent or guardian and believe your child has somehow provided personal information
+                through this app, please <a href="#contact-us">contact us</a> so we can investigate and take
+                appropriate action.
+            </p>
+        </section>
+
+        <!-- 9. Open Source -->
+        <section class="section" id="open-source">
+            <h2 class="section__heading"><span class="icon">📂</span> 9. Open Source Transparency</h2>
+            <p>
+                ClearBreeze Forecast is 100% open source, released under the
+                <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>. You
+                can inspect the complete source code to verify our privacy practices:
+            </p>
+            <div class="highlight-box">
+                <strong>Source Code:</strong>
+                <a href="https://github.com/richard-pius/ClearBreeze-Forecast" target="_blank" rel="noopener">
+                    github.com/richard-pius/ClearBreeze-Forecast
+                </a>
+            </div>
+            <p>
+                This transparency ensures that you can independently verify that the app behaves exactly as described
+                in this privacy policy.
+            </p>
+        </section>
+
+        <!-- 10. Changes to This Policy -->
+        <section class="section" id="changes-to-this-policy">
+            <h2 class="section__heading"><span class="icon">📝</span> 10. Changes to This Privacy Policy</h2>
+            <p>
+                We may update this Privacy Policy from time to time to reflect changes in the app's functionality
+                or applicable legal requirements. When we make changes:
+            </p>
+            <ul>
+                <li>The "Effective Date" at the top of this page will be updated</li>
+                <li>Material changes will be communicated through the app's update notes on Google Play</li>
+                <li>The updated policy will be published at this same URL</li>
+            </ul>
+            <p>
+                We encourage you to review this Privacy Policy periodically. Your continued use of the app after
+                any changes constitutes your acceptance of the updated policy.
+            </p>
+        </section>
+
+        <!-- 11. Contact Us -->
+        <section class="section" id="contact-us">
+            <h2 class="section__heading"><span class="icon">📬</span> 11. Contact Us</h2>
+            <p>
+                If you have any questions, concerns, or requests regarding this Privacy Policy or the app's data
+                practices, please contact us:
+            </p>
+            <div class="highlight-box">
+                <strong>Developer:</strong> Richard Pius<br>
+                <strong>Email:</strong> <a href="mailto:richardpius007@gmail.com">richardpius007@gmail.com</a><br>
+                <strong>GitHub:</strong> <a href="https://github.com/richard-pius" target="_blank" rel="noopener">github.com/richard-pius</a>
+            </div>
+            <p>
+                We will make every effort to respond to your inquiry in a timely manner.
+            </p>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 Richard Pius. All rights reserved.</p>
+        <p>
+            ClearBreeze Forecast is open-source software licensed under the
+            <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener">MIT License</a>.
+        </p>
+    </footer>
+
+</body>
+</html>
