@@ -154,17 +154,30 @@ class _AqiGaugePainter extends CustomPainter {
     final double dotX = centerX + radius * math.cos(endAngle);
     final double dotY = centerY + radius * math.sin(endAngle);
 
+    // Indicator dot at the arc tip. In dark mode we use a white core with a
+    // deep-navy ring for contrast; in light mode we invert so the dot reads
+    // on pale sky/pastel backgrounds.
+    final Color dotCore = isDark ? Colors.white : Colors.white;
+    final Color dotRing =
+        isDark ? AppTheme.primaryDark : const Color(0xFF1E293B);
+
+    // Soft glow behind the dot for a premium touch.
+    final Paint glow = Paint()
+      ..color = Colors.white.withValues(alpha: isDark ? 0.35 : 0.55)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawCircle(Offset(dotX, dotY), 10.0, glow);
+
     final Paint dotPaint = Paint()
-      ..color = Colors.white
+      ..color = dotCore
       ..style = PaintingStyle.fill;
 
     final Paint dotBorderPaint = Paint()
-      ..color = AppTheme.primaryDark
-      ..strokeWidth = 3.0
+      ..color = dotRing
+      ..strokeWidth = 2.5
       ..style = PaintingStyle.stroke;
 
-    canvas.drawCircle(Offset(dotX, dotY), 9.0, dotPaint);
-    canvas.drawCircle(Offset(dotX, dotY), 9.0, dotBorderPaint);
+    canvas.drawCircle(Offset(dotX, dotY), 8.0, dotPaint);
+    canvas.drawCircle(Offset(dotX, dotY), 8.0, dotBorderPaint);
   }
 
   @override

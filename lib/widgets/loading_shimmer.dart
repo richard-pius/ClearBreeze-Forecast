@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:shimmer/shimmer.dart';
 
+/// Skeleton loader whose shape mirrors the loaded home screen — greeting +
+/// location strip, hero card, detail row, precipitation card, AQI card,
+/// hourly forecast, and daily forecast.
 class LoadingShimmer extends StatelessWidget {
   const LoadingShimmer({super.key});
 
@@ -22,55 +25,57 @@ class LoadingShimmer extends StatelessWidget {
       child: SingleChildScrollView(
         physics: const NeverScrollableScrollPhysics(),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const SizedBox(height: 20),
-            // Location Header Skeleton
-            Container(
-              height: 28,
-              width: 180,
-              decoration: BoxDecoration(
-                color: skeletonColor,
-                borderRadius: BorderRadius.circular(6),
-              ),
-            ),
+            // Greeting pill.
+            _pill(width: 90, height: 12, color: skeletonColor),
+            const SizedBox(height: 10),
+            // Location name.
+            _pill(width: 200, height: 22, color: skeletonColor),
             const SizedBox(height: 8),
-            Container(
-              height: 14,
-              width: 100,
-              decoration: BoxDecoration(
-                color: skeletonColor,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            const SizedBox(height: 35),
-            
-            // Hero Current Weather Skeleton
-            _buildCardSkeleton(height: 180, color: skeletonColor),
-            const SizedBox(height: 20),
+            _pill(width: 120, height: 12, color: skeletonColor),
+            const SizedBox(height: 24),
 
-            // Detail Grid Skeleton
-            _buildCardSkeleton(height: 90, color: skeletonColor),
-            const SizedBox(height: 20),
-
-            // AQI Card Skeleton
-            _buildCardSkeleton(height: 160, color: skeletonColor),
-            const SizedBox(height: 20),
-
-            // Hourly Forecast Skeleton
-            _buildCardSkeleton(height: 150, color: skeletonColor),
+            _card(height: 260, color: skeletonColor), // hero
+            const SizedBox(height: 16),
+            _card(height: 100, color: skeletonColor), // detail row
+            const SizedBox(height: 16),
+            _card(height: 120, color: skeletonColor), // rain
+            const SizedBox(height: 16),
+            _card(height: 180, color: skeletonColor), // aqi
+            const SizedBox(height: 16),
+            _card(height: 170, color: skeletonColor), // hourly
+            const SizedBox(height: 16),
+            _card(height: 260, color: skeletonColor), // daily
           ],
         ),
       ),
     );
   }
 
-  Widget _buildCardSkeleton({required double height, required Color color}) {
+  Widget _pill({
+    required double width,
+    required double height,
+    required Color color,
+  }) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(height / 2),
+      ),
+    );
+  }
+
+  Widget _card({required double height, required Color color}) {
     return Container(
       width: double.infinity,
       height: height,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
       ),
     );
   }
