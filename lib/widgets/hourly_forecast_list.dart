@@ -16,110 +16,173 @@ class HourlyForecastList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final weatherProvider = Provider.of<WeatherProvider>(context, listen: false);
+    // Watch so unit toggles refresh the row temperatures.
+    final weatherProvider = context.watch<WeatherProvider>();
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final Color primaryTextColor = isDark ? Colors.white : const Color(0xFF1E293B);
-    final Color secondaryTextColor = isDark ? Colors.white60 : const Color(0xFF64748B);
+    final Color primaryTextColor =
+        isDark ? Colors.white : const Color(0xFF0F172A);
+    final Color secondaryTextColor =
+        isDark ? Colors.white60 : const Color(0xFF64748B);
     final Color highlightBg = isDark
-        ? Colors.white.withValues(alpha: 0.05)
-        : Colors.white.withValues(alpha: 0.3);
-    final Color rainColor = isDark ? Colors.lightBlueAccent : Colors.blue[700]!;
+        ? Colors.white.withValues(alpha: 0.09)
+        : Colors.white.withValues(alpha: 0.55);
+    final Color highlightBorder = isDark
+        ? Colors.white.withValues(alpha: 0.18)
+        : Colors.white.withValues(alpha: 0.9);
+    final Color rainColor =
+        isDark ? Colors.lightBlueAccent : Colors.blue.shade700;
 
     return GlassmorphicCard(
-      padding: const EdgeInsets.symmetric(vertical: 15.0, horizontal: 10.0),
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Text(
-              'Hourly Forecast',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-                color: primaryTextColor,
-              ),
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              children: [
+                Icon(Icons.access_time_rounded,
+                    size: 20, color: secondaryTextColor),
+                const SizedBox(width: 8),
+                Text(
+                  'Hourly Forecast',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: primaryTextColor,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 15),
+          const SizedBox(height: 12),
           SizedBox(
-            height: 120,
+            height: 130,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              // ListView.builder + itemExtent lets Flutter avoid per-frame
+              // layout on the child list — meaningful on lower-end devices
+              // with 24-48 hour lists.
+              itemExtent: 68,
               itemCount: hourlyForecasts.length,
               itemBuilder: (context, index) {
                 final HourlyForecast hour = hourlyForecasts[index];
-                
-                // First item is labeled 'Now' instead of the hour name
-                final String timeLabel = index == 0 
-                    ? 'Now' 
-                    : DateFormatter.formatShortHour(hour.time);
-                
-                final String tempStr = '${weatherProvider.formatTemperature(hour.temperature).round()}°';
-                final String emoji = WeatherIconMapper.getEmoji(hour.symbolCode);
+                final bool isNow = index == 0;
+
+                final String timeLabel =
+                    isNow ? 'Now' : DateFormatter.formatShortHour(hour.time);
+                final String tempStr =
+                    '${weatherProvider.formatTemperature(hour.temperature).round()}°';
+                final String emoji =
+                    WeatherIconMapper.getEmoji(hour.symbolCode);
                 final int prob = hour.precipitationProbability.round();
 
-                return Container(
-                  width: 70,
-                  margin: const EdgeInsets.symmetric(horizontal: 4.0),
-                  decoration: BoxDecoration(
-                    color: index == 0 ? highlightBg : Colors.transparent,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        timeLabel,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: index == 0 ? primaryTextColor : secondaryTextColor,
-                          fontWeight: index == 0 ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        emoji,
-                        style: const TextStyle(fontSize: 26),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        tempStr,
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: index == 0 ? FontWeight.bold : FontWeight.w600,
-                          color: primaryTextColor,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // If there is a meaningful probability of rain, show it
-                      if (prob >= 15)
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.water_drop_rounded,
-                              size: 10,
-                              color: rainColor,
-                            ),
-                            Text(
-                              '$prob%',
-                              style: TextStyle(
-                                fontSize: 9,
-                                color: rainColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        )
-                      else
-                        const SizedBox(height: 12), // Placeholder spacing
-                    ],
-                  ),
+                return _HourCell(
+                  timeLabel: timeLabel,
+                  emoji: emoji,
+                  tempStr: tempStr,
+                  probability: prob,
+                  isNow: isNow,
+                  primaryColor: primaryTextColor,
+                  secondaryColor: secondaryTextColor,
+                  highlightBg: highlightBg,
+                  highlightBorder: highlightBorder,
+                  rainColor: rainColor,
                 );
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HourCell extends StatelessWidget {
+  final String timeLabel;
+  final String emoji;
+  final String tempStr;
+  final int probability;
+  final bool isNow;
+  final Color primaryColor;
+  final Color secondaryColor;
+  final Color highlightBg;
+  final Color highlightBorder;
+  final Color rainColor;
+
+  const _HourCell({
+    required this.timeLabel,
+    required this.emoji,
+    required this.tempStr,
+    required this.probability,
+    required this.isNow,
+    required this.primaryColor,
+    required this.secondaryColor,
+    required this.highlightBg,
+    required this.highlightBorder,
+    required this.rainColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bool showProb = probability >= 15;
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
+      decoration: BoxDecoration(
+        color: isNow ? highlightBg : Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        border:
+            isNow ? Border.all(color: highlightBorder, width: 1) : null,
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            timeLabel,
+            style: TextStyle(
+              fontSize: 12,
+              color: isNow ? primaryColor : secondaryColor,
+              fontWeight: isNow ? FontWeight.w700 : FontWeight.w500,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(emoji, style: const TextStyle(fontSize: 26)),
+          const SizedBox(height: 8),
+          Text(
+            tempStr,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: primaryColor,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Reserve constant height whether or not we show the badge, so all
+          // cells align vertically.
+          SizedBox(
+            height: 14,
+            child: showProb
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.water_drop_rounded,
+                          size: 10, color: rainColor),
+                      const SizedBox(width: 2),
+                      Text(
+                        '$probability%',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: rainColor,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  )
+                : null,
           ),
         ],
       ),

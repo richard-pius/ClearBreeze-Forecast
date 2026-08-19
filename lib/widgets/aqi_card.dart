@@ -15,12 +15,14 @@ class AqiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
-    final Color primaryTextColor = isDark ? Colors.white : const Color(0xFF1E293B);
-    final Color secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF475569);
-    final Color mutedTextColor = isDark
-        ? const Color(0x80FFFFFF)
-        : const Color(0xFF64748B); // Slate 500
-    final Color iconMutedColor = isDark ? Colors.white70 : const Color(0xFF64748B);
+    final Color primaryTextColor =
+        isDark ? Colors.white : const Color(0xFF0F172A);
+    final Color secondaryTextColor =
+        isDark ? Colors.white70 : const Color(0xFF475569);
+    final Color mutedTextColor =
+        isDark ? const Color(0x80FFFFFF) : const Color(0xFF64748B);
+    final Color iconMutedColor =
+        isDark ? Colors.white70 : const Color(0xFF64748B);
     final Color dividerColor = isDark ? Colors.white10 : Colors.black12;
 
     if (aqiData.isEmpty || aqiData.aqi == 0) {
@@ -48,7 +50,8 @@ class AqiCard extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 10.0),
                 child: Column(
                   children: [
-                    Icon(Icons.location_off_outlined, size: 40, color: secondaryTextColor),
+                    Icon(Icons.location_off_outlined,
+                        size: 40, color: secondaryTextColor),
                     const SizedBox(height: 10),
                     Text(
                       'No AQI Monitoring Stations Nearby',
@@ -83,7 +86,12 @@ class AqiCard extends StatelessWidget {
     final Color color = aqiLevel['color'];
     final String description = aqiLevel['description'];
 
+    // Build the list of available pollutants so we only render chips for
+    // stations that reported that particular reading.
+    final List<_Pollutant> pollutants = _collectPollutants(aqiData);
+
     return GlassmorphicCard(
+      accentColor: color,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -121,10 +129,14 @@ class AqiCard extends StatelessWidget {
                           children: [
                             Text(
                               '$aqi',
-                              style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .displayMedium
+                                  ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 34,
                                     height: 1.0,
+                                    color: primaryTextColor,
                                   ),
                             ),
                             Text(
@@ -149,7 +161,8 @@ class AqiCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(12),
@@ -183,9 +196,25 @@ class AqiCard extends StatelessWidget {
               ),
             ],
           ),
+          // Pollutant chip row — only when at least one reading exists.
+          if (pollutants.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: pollutants
+                  .map((p) => _PollutantChip(
+                        pollutant: p,
+                        isDark: isDark,
+                        textColor: primaryTextColor,
+                        labelColor: mutedTextColor,
+                      ))
+                  .toList(growable: false),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Divider(color: dividerColor, height: 1),
           const SizedBox(height: 10),
-          Divider(color: dividerColor),
-          const SizedBox(height: 4),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -193,21 +222,104 @@ class AqiCard extends StatelessWidget {
                 child: Text(
                   'Station: ${aqiData.stationName}',
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: mutedTextColor,
-                  ),
+                  style: TextStyle(fontSize: 11, color: mutedTextColor),
                 ),
               ),
               if (aqiData.distanceKm != null)
                 Text(
                   '${aqiData.distanceKm} km away',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: mutedTextColor,
-                  ),
+                  style: TextStyle(fontSize: 11, color: mutedTextColor),
                 ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Collect only the pollutant readings that are actually present.
+  List<_Pollutant> _collectPollutants(AirQualityData d) {
+    final List<_Pollutant> list = [];
+    if (d.pm25 != null) {
+      list.add(_Pollutant('PM2.5', d.pm25!, 'µg/m³'));
+    }
+    if (d.pm10 != null) {
+      list.add(_Pollutant('PM10', d.pm10!, 'µg/m³'));
+    }
+    if (d.o3 != null) list.add(_Pollutant('O₃', d.o3!, 'µg/m³'));
+    if (d.no2 != null) list.add(_Pollutant('NO₂', d.no2!, 'µg/m³'));
+    if (d.so2 != null) list.add(_Pollutant('SO₂', d.so2!, 'µg/m³'));
+    if (d.co != null) list.add(_Pollutant('CO', d.co!, 'mg/m³'));
+    return list;
+  }
+}
+
+class _Pollutant {
+  final String label;
+  final double value;
+  final String unit;
+  const _Pollutant(this.label, this.value, this.unit);
+}
+
+class _PollutantChip extends StatelessWidget {
+  final _Pollutant pollutant;
+  final bool isDark;
+  final Color textColor;
+  final Color labelColor;
+
+  const _PollutantChip({
+    required this.pollutant,
+    required this.isDark,
+    required this.textColor,
+    required this.labelColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final Color chipBg = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : Colors.white.withValues(alpha: 0.55);
+    final Color chipBorder = isDark
+        ? Colors.white.withValues(alpha: 0.12)
+        : Colors.white.withValues(alpha: 0.85);
+
+    // Render value with sensible precision (integer if it's a whole number).
+    final double v = pollutant.value;
+    final String valueStr =
+        v >= 100 ? v.round().toString() : v.toStringAsFixed(1);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: chipBg,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: chipBorder),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            pollutant.label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: labelColor,
+              letterSpacing: 0.3,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            valueStr,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: textColor,
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            pollutant.unit,
+            style: TextStyle(fontSize: 10, color: labelColor),
           ),
         ],
       ),

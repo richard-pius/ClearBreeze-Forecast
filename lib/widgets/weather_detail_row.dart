@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../models/weather_data.dart';
 import 'glassmorphic_card.dart';
@@ -21,51 +23,51 @@ class WeatherDetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
     final String windDir = _getWindDirectionString(weatherData.windDirection);
-    final String windStr = '${weatherData.windSpeed.toStringAsFixed(1)} m/s $windDir';
+    final String windStr = '${weatherData.windSpeed.toStringAsFixed(1)} m/s';
     final String humidityStr = '${weatherData.humidity.round()}%';
     final String pressureStr = '${weatherData.pressure.round()} hPa';
 
     final Color labelColor = isDark
-        ? const Color(0x80FFFFFF)
-        : const Color(0xFF475569); // Slate 600
-    final Color valueColor = isDark ? Colors.white : const Color(0xFF1E293B);
+        ? const Color(0xB3FFFFFF)
+        : const Color(0xFF475569);
+    final Color valueColor =
+        isDark ? Colors.white : const Color(0xFF0F172A);
     final Color dividerColor = isDark
         ? Colors.white.withValues(alpha: 0.12)
-        : Colors.black.withValues(alpha: 0.1);
+        : Colors.black.withValues(alpha: 0.08);
 
     return GlassmorphicCard(
-      padding: const EdgeInsets.symmetric(vertical: 18.0, horizontal: 10.0),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          _buildDetailItem(
+          _buildWindItem(
             context,
-            Icons.air_rounded,
-            'Wind',
-            windStr,
-            Colors.blueAccent,
-            labelColor,
-            valueColor,
+            speed: windStr,
+            direction: windDir,
+            degrees: weatherData.windDirection,
+            labelColor: labelColor,
+            valueColor: valueColor,
           ),
           _buildDivider(dividerColor),
           _buildDetailItem(
             context,
-            Icons.water_drop_rounded,
-            'Humidity',
-            humidityStr,
-            Colors.lightBlueAccent,
-            labelColor,
-            valueColor,
+            icon: Icons.water_drop_rounded,
+            label: 'Humidity',
+            value: humidityStr,
+            iconColor: const Color(0xFF60A5FA),
+            labelColor: labelColor,
+            valueColor: valueColor,
           ),
           _buildDivider(dividerColor),
           _buildDetailItem(
             context,
-            Icons.speed_rounded,
-            'Pressure',
-            pressureStr,
-            Colors.blueGrey,
-            labelColor,
-            valueColor,
+            icon: Icons.speed_rounded,
+            label: 'Pressure',
+            value: pressureStr,
+            iconColor: const Color(0xFF94A3B8),
+            labelColor: labelColor,
+            valueColor: valueColor,
           ),
         ],
       ),
@@ -74,21 +76,21 @@ class WeatherDetailRow extends StatelessWidget {
 
   Widget _buildDivider(Color color) {
     return Container(
-      height: 35,
+      height: 40,
       width: 1,
       color: color,
     );
   }
 
   Widget _buildDetailItem(
-    BuildContext context,
-    IconData icon,
-    String label,
-    String value,
-    Color iconColor,
-    Color labelColor,
-    Color valueColor,
-  ) {
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color iconColor,
+    required Color labelColor,
+    required Color valueColor,
+  }) {
     return Expanded(
       child: Column(
         children: [
@@ -100,6 +102,7 @@ class WeatherDetailRow extends StatelessWidget {
               fontSize: 12,
               color: labelColor,
               fontWeight: FontWeight.w500,
+              letterSpacing: 0.2,
             ),
           ),
           const SizedBox(height: 4),
@@ -108,7 +111,52 @@ class WeatherDetailRow extends StatelessWidget {
             style: TextStyle(
               fontSize: 14,
               color: valueColor,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Wind gets a rotated arrow reflecting the true wind direction — the arrow
+  /// points *in the direction the wind is blowing*.
+  Widget _buildWindItem(
+    BuildContext context, {
+    required String speed,
+    required String direction,
+    required double degrees,
+    required Color labelColor,
+    required Color valueColor,
+  }) {
+    return Expanded(
+      child: Column(
+        children: [
+          Transform.rotate(
+            angle: degrees * math.pi / 180,
+            child: const Icon(
+              Icons.navigation_rounded,
+              color: Color(0xFF60A5FA),
+              size: 24,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Wind · $direction',
+            style: TextStyle(
+              fontSize: 12,
+              color: labelColor,
+              fontWeight: FontWeight.w500,
+              letterSpacing: 0.2,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            speed,
+            style: TextStyle(
+              fontSize: 14,
+              color: valueColor,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
