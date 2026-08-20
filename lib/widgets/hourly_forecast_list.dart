@@ -77,7 +77,10 @@ class HourlyForecastList extends StatelessWidget {
                     '${weatherProvider.formatTemperature(hour.temperature).round()}°';
                 final String emoji =
                     WeatherIconMapper.getEmoji(hour.symbolCode);
-                final int prob = hour.precipitationProbability.round();
+                // Only forward a badge value when the API actually reported a
+                // probability. Passing null hides the badge — we never invent
+                // percentages for regions MET Norway doesn't cover.
+                final int? prob = hour.precipitationProbability?.round();
 
                 return _HourCell(
                   timeLabel: timeLabel,
@@ -104,7 +107,9 @@ class _HourCell extends StatelessWidget {
   final String timeLabel;
   final String emoji;
   final String tempStr;
-  final int probability;
+  // Null when the API didn't report a precipitation probability for this
+  // hour — the badge is simply hidden rather than showing a fake number.
+  final int? probability;
   final bool isNow;
   final Color primaryColor;
   final Color secondaryColor;
@@ -127,7 +132,7 @@ class _HourCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool showProb = probability >= 15;
+    final bool showProb = probability != null && probability! >= 15;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 4),
