@@ -10,8 +10,9 @@ class WeatherService {
   WeatherService({http.Client? client}) : client = client ?? http.Client();
 
   /// Fetches weather data from MET Norway Locationforecast 2.0 API.
-  Future<WeatherData> fetchWeather(double latitude, double longitude, String locationName) async {
-    // 1. Truncate coordinates to max 4 decimal places per MET Norway requirements (improves caching)
+  Future<WeatherData> fetchWeather(
+      double latitude, double longitude, String locationName) async {
+    // Truncate coordinates to max 4 decimal places per MET Norway requirements.
     final double lat = double.parse(latitude.toStringAsFixed(4));
     final double lon = double.parse(longitude.toStringAsFixed(4));
 
@@ -38,8 +39,13 @@ class WeatherService {
     }
   }
 
-  /// Parses the complex MET Norway timeseries JSON payload into WeatherData model
-  WeatherData _parseWeatherData(Map<String, dynamic> json, String locationName) {
+  /// Parses the MET Norway timeseries payload.
+  ///
+  /// Any field the API does not report is left as `null` in the returned
+  /// model — the UI treats `null` as "not available at this location" rather
+  /// than fabricating a zero or estimating.
+  WeatherData _parseWeatherData(
+      Map<String, dynamic> json, String locationName) {
     final Map<String, dynamic> properties = json['properties'];
     final List<dynamic> timeseries = properties['timeseries'];
 
@@ -47,53 +53,59 @@ class WeatherService {
       throw Exception('Empty weather timeseries data.');
     }
 
-    // Current weather is the first point in the timeseries
+    // Current weather is the first point in the timeseries.
     final Map<String, dynamic> currentPoint = timeseries.first;
-    final String timeStr = currentPoint['time'];
-    final DateTime currentTime = DateTime.parse(timeStr);
+    final DateTime currentTime = DateTime.parse(currentPoint['time']);
     final Map<String, dynamic> currentData = currentPoint['data'];
-    final Map<String, dynamic> instantDetails = currentData['instant']['details'];
+    final Map<String, dynamic> instantDetails =
+        currentData['instant']?['details'] ?? const {};
 
-    // Extract current metrics
-    final double temperature = _toDouble(instantDetails['air_temperature']);
-    final double windSpeed = _toDouble(instantDetails['wind_speed']);
-    final double windDirection = _toDouble(instantDetails['wind_from_direction']);
-    final double humidity = _toDouble(instantDetails['relative_humidity']);
-    final double pressure = _toDouble(instantDetails['air_pressure_at_sea_level']);
+    // Temperature is required — without it the app cannot render a hero.
+    final double? temperatureRaw = _toDouble(instantDetails['air_temperature']);
+    if (temperatureRaw == null) {
+      throw Exception(
+          'Weather service returned no temperature reading for this location.');
+    }
+    final double temperature = temperatureRaw;
 
-    // Next 1 hour aggregations for current precipitation/prob
-    double precipitation = 0.0;
-    double rainProbability = 0.0;
-    String symbolCode = 'clearsky_day'; // fallback
-    bool hasExplicitProbability = false;
+    final double? windSpeed = _toDouble(instantDetails['wind_speed']);
+    final double? windDirection =
+        _toDouble(instantDetails['wind_from_direction']);
+    final double? humidity = _toDouble(instantDetails['relative_humidity']);
+    final double? pressure =
+        _toDouble(instantDetails['air_pressure_at_sea_level']);
+
+    // Precipitation + symbol come from the next_1_hours block if it exists,
+    // otherwise next_6_hours. Both may be absent at the tail of the forecast
+    // horizon — in that case precipitation is null (not zero).
+    double? precipitation;
+    double? precipitationProbability;
+    String symbolCode = 'clearsky_day'; // benign visual fallback
 
     final Map<String, dynamic>? next1Hour = currentData['next_1_hours'];
     if (next1Hour != null) {
       precipitation = _toDouble(next1Hour['details']?['precipitation_amount']);
-      final dynamic rawProb = next1Hour['details']?['probability_of_precipitation'];
-      hasExplicitProbability = rawProb != null;
-      rainProbability = _toDouble(rawProb);
+      // MET Norway only ships probability_of_precipitation for Nordic
+      // regions. We keep it nullable — the UI shows "not available at this
+      // location" everywhere else rather than inventing a percentage.
+      precipitationProbability =
+          _toDouble(next1Hour['details']?['probability_of_precipitation']);
       symbolCode = next1Hour['summary']?['symbol_code'] ?? symbolCode;
     } else {
-      // Try next 6 hours if next 1 hour is null (unlikely for current point)
       final Map<String, dynamic>? next6Hour = currentData['next_6_hours'];
       if (next6Hour != null) {
-        precipitation = _toDouble(next6Hour['details']?['precipitation_amount']);
-        final dynamic rawProb = next6Hour['details']?['probability_of_precipitation'];
-        hasExplicitProbability = rawProb != null;
-        rainProbability = _toDouble(rawProb);
+        precipitation =
+            _toDouble(next6Hour['details']?['precipitation_amount']);
+        precipitationProbability =
+            _toDouble(next6Hour['details']?['probability_of_precipitation']);
         symbolCode = next6Hour['summary']?['symbol_code'] ?? symbolCode;
       }
     }
 
-    // If no explicit probability from API, estimate from symbol_code and precipitation_amount
-    if (!hasExplicitProbability) {
-      rainProbability = _estimateProbabilityFromSymbol(symbolCode, precipitation);
-    }
+    final String conditionText =
+        WeatherIconMapper.getConditionDescription(symbolCode);
 
-    final String conditionText = WeatherIconMapper.getConditionDescription(symbolCode);
-
-    // 2. Parse hourly forecast for next 24 hours
+    // Hourly forecast for the next 24 hours.
     final List<HourlyForecast> hourlyForecasts = [];
     final int hourLimit = timeseries.length > 24 ? 24 : timeseries.length;
 
@@ -101,64 +113,56 @@ class WeatherService {
       final Map<String, dynamic> point = timeseries[i];
       final DateTime hourTime = DateTime.parse(point['time']);
       final Map<String, dynamic> pData = point['data'];
-      final Map<String, dynamic> pInstantDetails = pData['instant']['details'];
-      
-      final double temp = _toDouble(pInstantDetails['air_temperature']);
-      double prec = 0.0;
-      double prob = 0.0;
+      final Map<String, dynamic> pInstantDetails =
+          pData['instant']?['details'] ?? const {};
+
+      final double? tRaw = _toDouble(pInstantDetails['air_temperature']);
+      if (tRaw == null) continue; // Skip broken points rather than show 0°.
+
+      double? prec;
+      double? prob;
       String sym = 'clearsky_day';
-      bool hHasExplicitProb = false;
 
       final Map<String, dynamic>? hNext1Hour = pData['next_1_hours'];
       if (hNext1Hour != null) {
         prec = _toDouble(hNext1Hour['details']?['precipitation_amount']);
-        final dynamic hRawProb = hNext1Hour['details']?['probability_of_precipitation'];
-        hHasExplicitProb = hRawProb != null;
-        prob = _toDouble(hRawProb);
+        prob = _toDouble(hNext1Hour['details']?['probability_of_precipitation']);
         sym = hNext1Hour['summary']?['symbol_code'] ?? sym;
       } else {
         final Map<String, dynamic>? hNext6Hour = pData['next_6_hours'];
         if (hNext6Hour != null) {
-          prec = _toDouble(hNext6Hour['details']?['precipitation_amount']) / 6.0; // average hourly
-          final dynamic hRawProb = hNext6Hour['details']?['probability_of_precipitation'];
-          hHasExplicitProb = hRawProb != null;
-          prob = _toDouble(hRawProb);
+          final double? sixHrPrec =
+              _toDouble(hNext6Hour['details']?['precipitation_amount']);
+          // Averaging preserves null-ness — if the 6-hour amount wasn't
+          // reported, don't invent an hourly average.
+          prec = sixHrPrec == null ? null : sixHrPrec / 6.0;
+          prob =
+              _toDouble(hNext6Hour['details']?['probability_of_precipitation']);
           sym = hNext6Hour['summary']?['symbol_code'] ?? sym;
         }
       }
 
-      // If no explicit probability from API, estimate from symbol_code
-      if (!hHasExplicitProb) {
-        prob = _estimateProbabilityFromSymbol(sym, prec);
-      }
-
       hourlyForecasts.add(HourlyForecast(
         time: hourTime,
-        temperature: temp,
+        temperature: tRaw,
         precipitation: prec,
         precipitationProbability: prob,
         symbolCode: sym,
       ));
     }
 
-    // 3. Parse daily forecast (group timeseries by day for the next 7 days)
-    final List<DailyForecast> dailyForecasts = [];
+    // Daily forecast — group timeseries points by local calendar day.
     final Map<String, List<Map<String, dynamic>>> groupedPoints = {};
-
     for (var point in timeseries) {
       final DateTime date = DateTime.parse(point['time']).toLocal();
-      final String dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-      
-      // Skip current day if it's already mostly past, or just group all
-      if (!groupedPoints.containsKey(dateKey)) {
-        groupedPoints[dateKey] = [];
-      }
-      groupedPoints[dateKey]!.add(point);
+      final String dateKey =
+          '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+      (groupedPoints[dateKey] ??= []).add(point);
     }
 
-    // Process up to 7 distinct days
     final List<String> sortedKeys = groupedPoints.keys.toList()..sort();
     final int dayLimit = sortedKeys.length > 7 ? 7 : sortedKeys.length;
+    final List<DailyForecast> dailyForecasts = [];
 
     for (int d = 0; d < dayLimit; d++) {
       final String dateKey = sortedKeys[d];
@@ -167,45 +171,45 @@ class WeatherService {
 
       double tMin = double.infinity;
       double tMax = -double.infinity;
-      double totalPrec = 0.0;
-      double maxProb = 0.0;
+      double? totalPrec; // null until we see at least one reported value.
+      double? maxProb; // null unless the API actually reports a probability.
       final Map<String, int> symbolCount = {};
 
       for (var point in points) {
         final Map<String, dynamic> dataBlock = point['data'];
         final Map<String, dynamic>? instant = dataBlock['instant'];
         if (instant != null) {
-          final double temp = _toDouble(instant['details']?['air_temperature']);
-          if (temp < tMin) tMin = temp;
-          if (temp > tMax) tMax = temp;
+          final double? temp = _toDouble(instant['details']?['air_temperature']);
+          if (temp != null) {
+            if (temp < tMin) tMin = temp;
+            if (temp > tMax) tMax = temp;
+          }
         }
 
-        // Sum precipitation and find max probability in the 6-hour blocks
         final Map<String, dynamic>? next6h = dataBlock['next_6_hours'];
         if (next6h != null) {
-          final double precAmt = _toDouble(next6h['details']?['precipitation_amount']);
-          totalPrec += precAmt;
-          final dynamic dRawProb = next6h['details']?['probability_of_precipitation'];
-          double prob = _toDouble(dRawProb);
-          final String? code = next6h['summary']?['symbol_code'];
-          
-          // If no explicit probability, estimate from symbol
-          if (dRawProb == null && code != null) {
-            prob = _estimateProbabilityFromSymbol(code, precAmt);
+          final double? precAmt =
+              _toDouble(next6h['details']?['precipitation_amount']);
+          if (precAmt != null) {
+            totalPrec = (totalPrec ?? 0) + precAmt;
           }
-          if (prob > maxProb) maxProb = prob;
-
+          final double? prob = _toDouble(
+              next6h['details']?['probability_of_precipitation']);
+          if (prob != null && (maxProb == null || prob > maxProb)) {
+            maxProb = prob;
+          }
+          final String? code = next6h['summary']?['symbol_code'];
           if (code != null) {
             symbolCount[code] = (symbolCount[code] ?? 0) + 1;
           }
         }
       }
 
-      // Fallbacks in case max/min/etc were not populated
+      // Fall back to current temp only when we saw literally no readings.
       if (tMin == double.infinity) tMin = temperature;
       if (tMax == -double.infinity) tMax = temperature;
 
-      // Select most common symbol code for the day
+      // Modal symbol for the day.
       String modalSymbol = symbolCode;
       int maxCount = 0;
       symbolCount.forEach((key, count) {
@@ -232,7 +236,7 @@ class WeatherService {
       humidity: humidity,
       pressure: pressure,
       precipitation: precipitation,
-      precipitationProbability: rainProbability,
+      precipitationProbability: precipitationProbability,
       symbolCode: symbolCode,
       conditionText: conditionText,
       time: currentTime,
@@ -241,77 +245,15 @@ class WeatherService {
     );
   }
 
-  double _toDouble(dynamic val) {
-    if (val == null) return 0.0;
+  /// Parses a numeric value from the JSON. Returns `null` when the value is
+  /// `null` (or non-numeric) — the UI treats that as "not reported at this
+  /// location" rather than falling back to 0.
+  double? _toDouble(dynamic val) {
+    if (val == null) return null;
     if (val is int) return val.toDouble();
     if (val is double) return val;
-    return 0.0;
-  }
-
-  /// Estimates precipitation probability from the MET Norway symbol_code.
-  /// The API only provides explicit probability_of_precipitation for Nordic regions.
-  /// For the rest of the world, we derive a reasonable estimate from the weather symbol
-  /// and precipitation amount.
-  double _estimateProbabilityFromSymbol(String symbolCode, double precipitationAmount) {
-    final String code = symbolCode.toLowerCase();
-
-    // Heavy precipitation symbols → high probability
-    if (code.contains('heavyrain') || code.contains('heavysnow') || code.contains('heavysleet')) {
-      return 90.0;
-    }
-
-    // Thunder symbols → high probability
-    if (code.contains('thunder')) {
-      return 80.0;
-    }
-
-    // Regular rain/snow/sleet (not "light" or "heavy")
-    if (code == 'rain' ||
-        code.startsWith('rain_') ||
-        code.contains('rainshowers') ||
-        code == 'snow' ||
-        code.startsWith('snow_') ||
-        code.contains('snowshowers') ||
-        code == 'sleet' ||
-        code.startsWith('sleet_') ||
-        code.contains('sleetshowers')) {
-      return 65.0;
-    }
-
-    // Light precipitation symbols → moderate probability
-    if (code.contains('lightrain') || code.contains('lightsnow') || code.contains('lightsleet')) {
-      return 40.0;
-    }
-
-    // Foggy conditions → slight chance
-    if (code.contains('fog')) {
-      return 15.0;
-    }
-
-    // Cloudy/partly cloudy → low probability
-    if (code.contains('cloudy') || code.contains('partlycloudy')) {
-      // If there's actual precipitation amount despite cloudy symbol, bump it up
-      if (precipitationAmount > 0) {
-        return 35.0;
-      }
-      return 10.0;
-    }
-
-    // Fair weather → very low
-    if (code.contains('fair')) {
-      return 5.0;
-    }
-
-    // Clear sky → essentially zero
-    if (code.contains('clearsky')) {
-      return 0.0;
-    }
-
-    // Fallback: if there's precipitation amount, give a moderate probability
-    if (precipitationAmount > 0) {
-      return 50.0;
-    }
-
-    return 0.0;
+    if (val is num) return val.toDouble();
+    if (val is String) return double.tryParse(val);
+    return null;
   }
 }

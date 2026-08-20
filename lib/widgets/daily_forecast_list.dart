@@ -79,7 +79,9 @@ class DailyForecastList extends StatelessWidget {
                 weatherProvider.formatTemperature(day.tempMin);
             final double tempMax =
                 weatherProvider.formatTemperature(day.tempMax);
-            final int prob = day.maxPrecipitationProbability.round();
+            // Null when MET Norway didn't report a probability for this day;
+            // the row simply omits the badge in that case.
+            final int? prob = day.maxPrecipitationProbability?.round();
             return _DailyForecastRow(
               dayName: DateFormatter.formatDayName(day.date),
               emoji: WeatherIconMapper.getEmoji(day.symbolCode),
@@ -103,7 +105,9 @@ class DailyForecastList extends StatelessWidget {
 class _DailyForecastRow extends StatelessWidget {
   final String dayName;
   final String emoji;
-  final int probability;
+  // Null when the API didn't report a probability for this day — the badge
+  // is hidden rather than showing a fabricated value.
+  final int? probability;
   final double tempMin;
   final double tempMax;
   final double weekMin;
@@ -157,7 +161,7 @@ class _DailyForecastRow extends StatelessWidget {
             child: Column(
               children: [
                 Text(emoji, style: const TextStyle(fontSize: 22)),
-                if (probability >= 15)
+                if (probability != null && probability! >= 15)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
                     child: Row(
