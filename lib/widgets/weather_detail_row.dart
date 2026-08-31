@@ -10,10 +10,7 @@ import 'glassmorphic_card.dart';
 class WeatherDetailRow extends StatelessWidget {
   final WeatherData weatherData;
 
-  const WeatherDetailRow({
-    super.key,
-    required this.weatherData,
-  });
+  const WeatherDetailRow({super.key, required this.weatherData});
 
   /// Converts wind degree to cardinal direction. Returns null when the input
   /// itself is null.
@@ -41,8 +38,7 @@ class WeatherDetailRow extends StatelessWidget {
     final Color labelColor = isDark
         ? const Color(0xB3FFFFFF)
         : const Color(0xFF475569);
-    final Color valueColor =
-        isDark ? Colors.white : const Color(0xFF0F172A);
+    final Color valueColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final Color mutedColor = isDark
         ? Colors.white.withValues(alpha: 0.45)
         : const Color(0xFF94A3B8);
@@ -109,11 +105,11 @@ class WeatherDetailRow extends StatelessWidget {
     return Expanded(
       child: Column(
         children: [
-          Icon(icon,
-              color: available
-                  ? iconColor
-                  : iconColor.withValues(alpha: 0.35),
-              size: 24),
+          Icon(
+            icon,
+            color: available ? iconColor : iconColor.withValues(alpha: 0.35),
+            size: 24,
+          ),
           const SizedBox(height: 8),
           Text(
             label,

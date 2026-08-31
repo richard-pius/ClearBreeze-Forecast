@@ -9,10 +9,7 @@ import 'glassmorphic_card.dart';
 class HourlyForecastList extends StatelessWidget {
   final List<HourlyForecast> hourlyForecasts;
 
-  const HourlyForecastList({
-    super.key,
-    required this.hourlyForecasts,
-  });
+  const HourlyForecastList({super.key, required this.hourlyForecasts});
 
   @override
   Widget build(BuildContext context) {
@@ -20,18 +17,21 @@ class HourlyForecastList extends StatelessWidget {
     final weatherProvider = context.watch<WeatherProvider>();
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final Color primaryTextColor =
-        isDark ? Colors.white : const Color(0xFF0F172A);
-    final Color secondaryTextColor =
-        isDark ? Colors.white60 : const Color(0xFF64748B);
+    final Color primaryTextColor = isDark
+        ? Colors.white
+        : const Color(0xFF0F172A);
+    final Color secondaryTextColor = isDark
+        ? Colors.white60
+        : const Color(0xFF64748B);
     final Color highlightBg = isDark
         ? Colors.white.withValues(alpha: 0.09)
         : Colors.white.withValues(alpha: 0.55);
     final Color highlightBorder = isDark
         ? Colors.white.withValues(alpha: 0.18)
         : Colors.white.withValues(alpha: 0.9);
-    final Color rainColor =
-        isDark ? Colors.lightBlueAccent : Colors.blue.shade700;
+    final Color rainColor = isDark
+        ? Colors.lightBlueAccent
+        : Colors.blue.shade700;
 
     return GlassmorphicCard(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
@@ -42,8 +42,11 @@ class HourlyForecastList extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 10),
             child: Row(
               children: [
-                Icon(Icons.access_time_rounded,
-                    size: 20, color: secondaryTextColor),
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 20,
+                  color: secondaryTextColor,
+                ),
                 const SizedBox(width: 8),
                 Text(
                   'Hourly Forecast',
@@ -71,12 +74,14 @@ class HourlyForecastList extends StatelessWidget {
                 final HourlyForecast hour = hourlyForecasts[index];
                 final bool isNow = index == 0;
 
-                final String timeLabel =
-                    isNow ? 'Now' : DateFormatter.formatShortHour(hour.time);
+                final String timeLabel = isNow
+                    ? 'Now'
+                    : DateFormatter.formatShortHour(hour.time);
                 final String tempStr =
                     '${weatherProvider.formatTemperature(hour.temperature).round()}°';
-                final String emoji =
-                    WeatherIconMapper.getEmoji(hour.symbolCode);
+                final String emoji = WeatherIconMapper.getEmoji(
+                  hour.symbolCode,
+                );
                 // Only forward a badge value when the API actually reported a
                 // probability. Passing null hides the badge — we never invent
                 // percentages for regions MET Norway doesn't cover.
@@ -139,8 +144,7 @@ class _HourCell extends StatelessWidget {
       decoration: BoxDecoration(
         color: isNow ? highlightBg : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
-        border:
-            isNow ? Border.all(color: highlightBorder, width: 1) : null,
+        border: isNow ? Border.all(color: highlightBorder, width: 1) : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -174,8 +178,11 @@ class _HourCell extends StatelessWidget {
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.water_drop_rounded,
-                          size: 10, color: rainColor),
+                      Icon(
+                        Icons.water_drop_rounded,
+                        size: 10,
+                        color: rainColor,
+                      ),
                       const SizedBox(width: 2),
                       Text(
                         '$probability%',

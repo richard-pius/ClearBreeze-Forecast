@@ -11,20 +11,27 @@ class AirQualityService {
 
   AirQualityService({http.Client? client}) : client = client ?? http.Client();
 
-  /// Fetches Air Quality data near coordinates.
-  /// If the API key is the default placeholder, it falls back to Demo Mode with simulated data.
+  /// Fetches live air quality near the given coordinates.
+  ///
+  /// This method never throws and never fabricates data. When a real AQI
+  /// cannot be produced — no API key, no nearby station, no PM readings, or
+  /// a network failure — it returns [AirQualityData.unavailable] carrying the
+  /// reason, so the UI can tell the user exactly what is missing and why.
   Future<AirQualityData> fetchAirQuality(double lat, double lon) async {
-    // Check if API key is still the placeholder
-    if (Constants.openaqApiKey == 'YOUR_OPENAQ_API_KEY_HERE' || 
-        Constants.openaqApiKey.trim().isEmpty) {
-      debugPrint('OpenAQ API Key is not set. Falling back to Demo Mode simulated data.');
-      return _generateSimulatedData(lat, lon);
+    if (Constants.openaqApiKey.trim().isEmpty ||
+        Constants.openaqApiKey == 'YOUR_OPENAQ_API_KEY_HERE') {
+      debugPrint(
+        'OpenAQ API key is not configured; air quality will show as unavailable.',
+      );
+      return AirQualityData.unavailable(AqiUnavailableReason.notConfigured);
     }
 
     try {
-      // Step 1: Find the nearest location (monitoring station) within search radius
+      // Step 1: Find the nearest monitoring station within the search radius.
       final Uri locationsUrl = Uri.parse(
-        '${Constants.openaqBaseUrl}/locations?coordinates=$lat,$lon&radius=${Constants.openaqSearchRadius}&limit=1',
+        '${Constants.openaqBaseUrl}/locations'
+        '?coordinates=$lat,$lon'
+        '&radius=${Constants.openaqSearchRadius}&limit=1',
       );
 
       final http.Response locationsResponse = await client.get(
@@ -36,45 +43,50 @@ class AirQualityService {
       );
 
       if (locationsResponse.statusCode != 200) {
-        throw Exception('OpenAQ Locations request failed with status: ${locationsResponse.statusCode}');
+        debugPrint(
+          'OpenAQ locations request failed: ${locationsResponse.statusCode}',
+        );
+        return AirQualityData.unavailable(AqiUnavailableReason.fetchFailed);
       }
 
-      final Map<String, dynamic> locationsJson = jsonDecode(locationsResponse.body);
+      final Map<String, dynamic> locationsJson = jsonDecode(
+        locationsResponse.body,
+      );
       final List<dynamic> locationsResults = locationsJson['results'] ?? [];
 
       if (locationsResults.isEmpty) {
-        // No stations nearby, return empty/no data state
-        return AirQualityData(
-          aqi: 0,
-          category: 'No Stations Nearby',
-          stationName: 'No station within 25km',
-          lastUpdated: DateTime.now(),
-        );
+        return AirQualityData.unavailable(AqiUnavailableReason.noStationNearby);
       }
 
-      // Select the closest station (first result)
       final Map<String, dynamic> nearestStation = locationsResults.first;
       final int stationId = nearestStation['id'];
-      final String stationName = nearestStation['name'] ?? 'Unnamed Station';
+      final String stationName =
+          nearestStation['name']?.toString() ?? 'Unnamed station';
       final List<dynamic> sensors = nearestStation['sensors'] ?? [];
-      
-      final double stationLat = nearestStation['coordinates']?['latitude'] ?? lat;
-      final double stationLon = nearestStation['coordinates']?['longitude'] ?? lon;
 
-      // Calculate distance between user coordinates and the station
-      final double distanceInMeters = Geolocator.distanceBetween(lat, lon, stationLat, stationLon);
-      final double distanceInKm = double.parse((distanceInMeters / 1000).toStringAsFixed(1));
+      final double stationLat =
+          _toDouble(nearestStation['coordinates']?['latitude']) ?? lat;
+      final double stationLon =
+          _toDouble(nearestStation['coordinates']?['longitude']) ?? lon;
 
-      // Build mapping from sensor ID to parameter name
+      final double distanceKm = double.parse(
+        (Geolocator.distanceBetween(lat, lon, stationLat, stationLon) / 1000)
+            .toStringAsFixed(1),
+      );
+
+      // Map sensor IDs to the parameter each one measures.
       final Map<int, String> sensorParameterMap = {};
-      for (var sensor in sensors) {
-        final int sensorId = sensor['id'];
-        final String paramName = sensor['parameter']?['name']?.toString().toLowerCase() ?? '';
-        sensorParameterMap[sensorId] = paramName;
+      for (final sensor in sensors) {
+        final int? sensorId = sensor['id'] as int?;
+        if (sensorId == null) continue;
+        sensorParameterMap[sensorId] =
+            sensor['parameter']?['name']?.toString().toLowerCase() ?? '';
       }
 
-      // Step 2: Fetch latest measurements for this specific location
-      final Uri latestUrl = Uri.parse('${Constants.openaqBaseUrl}/locations/$stationId/latest');
+      // Step 2: Fetch the latest measurements for that station.
+      final Uri latestUrl = Uri.parse(
+        '${Constants.openaqBaseUrl}/locations/$stationId/latest',
+      );
       final http.Response latestResponse = await client.get(
         latestUrl,
         headers: {
@@ -84,64 +96,72 @@ class AirQualityService {
       );
 
       if (latestResponse.statusCode != 200) {
-        throw Exception('OpenAQ Latest request failed with status: ${latestResponse.statusCode}');
+        debugPrint(
+          'OpenAQ latest request failed: ${latestResponse.statusCode}',
+        );
+        return AirQualityData.unavailable(
+          AqiUnavailableReason.fetchFailed,
+          stationName: stationName,
+          distanceKm: distanceKm,
+        );
       }
 
       final Map<String, dynamic> latestJson = jsonDecode(latestResponse.body);
       final List<dynamic> measurements = latestJson['results'] ?? [];
 
-      double? pm25;
-      double? pm10;
-      double? o3;
-      double? no2;
-      double? so2;
-      double? co;
-      DateTime lastUpdated = DateTime.now();
+      double? pm25, pm10, o3, no2, so2, co;
+      DateTime? lastUpdated;
 
-      // Map values based on sensor ID
-      for (var m in measurements) {
-        final int sensorId = m['sensorsId'];
-        final double value = (m['value'] as num).toDouble();
-        final String? paramName = sensorParameterMap[sensorId];
-        
-        final String utcTime = m['datetime']?['utc'] ?? '';
+      for (final m in measurements) {
+        final int? sensorId = m['sensorsId'] as int?;
+        final double? value = _toDouble(m['value']);
+        if (sensorId == null || value == null) continue;
+
+        final String utcTime = m['datetime']?['utc']?.toString() ?? '';
         if (utcTime.isNotEmpty) {
-          lastUpdated = DateTime.parse(utcTime);
+          lastUpdated = DateTime.tryParse(utcTime) ?? lastUpdated;
         }
 
-        if (paramName != null) {
-          switch (paramName) {
-            case 'pm25':
-            case 'pm2.5':
-              pm25 = value;
-              break;
-            case 'pm10':
-              pm10 = value;
-              break;
-            case 'o3':
-            case 'ozone':
-              o3 = value;
-              break;
-            case 'no2':
-              no2 = value;
-              break;
-            case 'so2':
-              so2 = value;
-              break;
-            case 'co':
-              co = value;
-              break;
-          }
+        switch (sensorParameterMap[sensorId]) {
+          case 'pm25':
+          case 'pm2.5':
+            pm25 = value;
+          case 'pm10':
+            pm10 = value;
+          case 'o3':
+          case 'ozone':
+            o3 = value;
+          case 'no2':
+            no2 = value;
+          case 'so2':
+            so2 = value;
+          case 'co':
+            co = value;
         }
       }
 
-      // Step 3: Calculate AQI using EPA formula
-      final int aqi = AqiCalculator.calculateAqi(pm25: pm25, pm10: pm10);
-      final String category = AqiCalculator.getCategory(aqi);
+      // Step 3: Compute the AQI. Null means the station reported neither
+      // PM2.5 nor PM10, so no EPA index can be derived.
+      final int? aqi = AqiCalculator.calculateAqi(pm25: pm25, pm10: pm10);
+
+      if (aqi == null) {
+        return AirQualityData.unavailable(
+          AqiUnavailableReason.noMeasurements,
+          stationName: stationName,
+          distanceKm: distanceKm,
+          // Any secondary pollutants the station *did* report are still
+          // passed through so the card can display them.
+          o3: o3,
+          no2: no2,
+          so2: so2,
+          co: co,
+          lastUpdated: lastUpdated?.toLocal(),
+        );
+      }
 
       return AirQualityData(
         aqi: aqi,
-        category: category,
+        category: AqiCalculator.getCategory(aqi),
         pm25: pm25,
         pm10: pm10,
         o3: o3,
@@ -149,51 +169,19 @@ class AirQualityService {
         so2: so2,
         co: co,
         stationName: stationName,
-        distanceKm: distanceInKm,
-        lastUpdated: lastUpdated.toLocal(),
+        distanceKm: distanceKm,
+        lastUpdated: (lastUpdated ?? DateTime.now()).toLocal(),
       );
-
     } catch (e) {
-      debugPrint('OpenAQ fetching error: $e');
-      throw Exception('Failed to load air quality data: $e');
+      debugPrint('OpenAQ fetch error: $e');
+      return AirQualityData.unavailable(AqiUnavailableReason.fetchFailed);
     }
   }
 
-  /// Generates mock data for Demo Mode. This allows the app to run without API key.
-  AirQualityData _generateSimulatedData(double lat, double lon) {
-    // Deterministic simulation based on coordinates so the data is stable
-    final int baseAqi = ((lat.abs() + lon.abs()) * 10).round() % 120 + 25; // range 25 to 145
-    
-    // Set PM values according to the simulated AQI
-    double pm25;
-    double pm10;
-
-    if (baseAqi <= 50) {
-      pm25 = baseAqi * 0.2; // 0 to 10
-      pm10 = baseAqi * 0.8; // 0 to 40
-    } else if (baseAqi <= 100) {
-      pm25 = 12.0 + (baseAqi - 50) * 0.46; // 12 to 35
-      pm10 = 54.0 + (baseAqi - 50) * 2.0;  // 54 to 154
-    } else {
-      pm25 = 35.0 + (baseAqi - 100) * 0.4; // 35 to 55
-      pm10 = 154.0 + (baseAqi - 100) * 2.0; // 154 to 254
-    }
-
-    final int finalAqi = AqiCalculator.calculateAqi(pm25: pm25, pm10: pm10);
-    final String category = AqiCalculator.getCategory(finalAqi);
-
-    return AirQualityData(
-      aqi: finalAqi,
-      category: category,
-      pm25: double.parse(pm25.toStringAsFixed(1)),
-      pm10: double.parse(pm10.toStringAsFixed(1)),
-      o3: 0.035,
-      no2: 12.0,
-      so2: 1.5,
-      co: 0.4,
-      stationName: 'Simulation Station (Demo)',
-      distanceKm: 2.4,
-      lastUpdated: DateTime.now(),
-    );
+  double? _toDouble(dynamic val) {
+    if (val == null) return null;
+    if (val is num) return val.toDouble();
+    if (val is String) return double.tryParse(val);
+    return null;
   }
 }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
@@ -50,21 +50,25 @@ class WeatherProvider extends ChangeNotifier {
     _loadUserPreferences();
   }
 
-  /// Load temperature unit setting from shared preferences
+  /// Load persisted settings from shared preferences.
   Future<void> _loadUserPreferences() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     _tempUnit = prefs.getString(Constants.keyTempUnit) ?? 'C';
-    
-    // Load recent searches
+
     final String? searchesJson = prefs.getString(Constants.keyRecentSearches);
     if (searchesJson != null) {
-      _recentSearches = List<String>.from(jsonDecode(searchesJson));
+      try {
+        _recentSearches = List<String>.from(jsonDecode(searchesJson));
+      } catch (e) {
+        debugPrint('Discarding corrupt recent-searches cache: $e');
+        _recentSearches = [];
+      }
     }
-    
+
     notifyListeners();
   }
 
-  /// Toggle between Celsius and Fahrenheit
+  /// Toggle between Celsius and Fahrenheit.
   Future<void> toggleTempUnit() async {
     _tempUnit = _tempUnit == 'C' ? 'F' : 'C';
     notifyListeners();
@@ -73,7 +77,7 @@ class WeatherProvider extends ChangeNotifier {
     await prefs.setString(Constants.keyTempUnit, _tempUnit);
   }
 
-  /// Helper to convert temperature to correct unit for UI display
+  /// Convert a Celsius value into the unit the user has selected.
   double formatTemperature(double tempCelsius) {
     if (_tempUnit == 'F') {
       return (tempCelsius * 9 / 5) + 32;
@@ -81,7 +85,7 @@ class WeatherProvider extends ChangeNotifier {
     return tempCelsius;
   }
 
-  /// Main method to fetch weather and air quality for the current GPS location
+  /// Fetch weather + air quality for the device's GPS location.
   Future<void> fetchWeatherData({bool isRefresh = false}) async {
     if (!isRefresh) {
       _state = WeatherState.loading;
@@ -89,10 +93,8 @@ class WeatherProvider extends ChangeNotifier {
     }
 
     try {
-      // 1. Get user GPS location
       final position = await LocationService.getCurrentLocation();
-      
-      // 2. Perform reverse geocoding to get City/Country name
+
       _locationName = await LocationService.getCityFromCoordinates(
         position.latitude,
         position.longitude,
@@ -101,26 +103,15 @@ class WeatherProvider extends ChangeNotifier {
       _searchQuery = '';
       notifyListeners();
 
-      // 3. Fetch weather and air quality in parallel to minimize load time
-      final results = await Future.wait([
-        _weatherService.fetchWeather(position.latitude, position.longitude, _locationName),
-        _aqiService.fetchAirQuality(position.latitude, position.longitude),
-      ]);
-
-      _weatherData = results[0] as WeatherData;
-      _aqiData = results[1] as AirQualityData;
-      
-      _state = WeatherState.loaded;
-      _errorMessage = '';
+      await _load(position.latitude, position.longitude);
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _state = WeatherState.error;
+      _fail(e);
     }
 
     notifyListeners();
   }
 
-  /// Fetch weather data for a searched city/area name
+  /// Fetch weather for a searched city / area name.
   Future<void> fetchWeatherForCity(String cityName) async {
     if (cityName.trim().isEmpty) return;
 
@@ -129,45 +120,38 @@ class WeatherProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // 1. Forward geocode: city name → coordinates
       final List<Location> locations = await locationFromAddress(cityName);
       if (locations.isEmpty) {
-        throw Exception('Could not find location "$cityName". Try a different name.');
+        throw Exception(
+          'Could not find location "$cityName". Try a different name.',
+        );
       }
 
       final Location loc = locations.first;
-      final double lat = loc.latitude;
-      final double lon = loc.longitude;
-
-      // 2. Reverse geocode to get a clean display name
-      _locationName = await LocationService.getCityFromCoordinates(lat, lon);
+      _locationName = await LocationService.getCityFromCoordinates(
+        loc.latitude,
+        loc.longitude,
+      );
       _isSearchMode = true;
       notifyListeners();
 
-      // 3. Fetch weather and AQI in parallel
-      final results = await Future.wait([
-        _weatherService.fetchWeather(lat, lon, _locationName),
-        _aqiService.fetchAirQuality(lat, lon),
-      ]);
-
-      _weatherData = results[0] as WeatherData;
-      _aqiData = results[1] as AirQualityData;
-
-      _state = WeatherState.loaded;
-      _errorMessage = '';
-
-      // 4. Save to recent searches
-      _addToRecentSearches(cityName.trim());
+      await _load(loc.latitude, loc.longitude);
+      if (_state == WeatherState.loaded) {
+        await _addToRecentSearches(cityName.trim());
+      }
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _state = WeatherState.error;
+      _fail(e);
     }
 
     notifyListeners();
   }
 
-  /// Fetch weather data for a specific coordinates pair and display name
-  Future<void> fetchWeatherForCoordinates(double lat, double lon, String displayName) async {
+  /// Fetch weather for explicit coordinates and a display name.
+  Future<void> fetchWeatherForCoordinates(
+    double lat,
+    double lon,
+    String displayName,
+  ) async {
     _state = WeatherState.loading;
     _searchQuery = displayName;
     _locationName = displayName;
@@ -175,60 +159,79 @@ class WeatherProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // Fetch weather and AQI in parallel
-      final results = await Future.wait([
-        _weatherService.fetchWeather(lat, lon, _locationName),
-        _aqiService.fetchAirQuality(lat, lon),
-      ]);
-
-      _weatherData = results[0] as WeatherData;
-      _aqiData = results[1] as AirQualityData;
-
-      _state = WeatherState.loaded;
-      _errorMessage = '';
-
-      // Save to recent searches
-      _addToRecentSearches(displayName);
+      await _load(lat, lon);
+      if (_state == WeatherState.loaded) {
+        await _addToRecentSearches(displayName);
+      }
     } catch (e) {
-      _errorMessage = e.toString().replaceAll('Exception: ', '');
-      _state = WeatherState.error;
+      _fail(e);
     }
 
     notifyListeners();
   }
 
-  /// Clear search and return to GPS location
+  /// Shared load path for every entry point.
+  ///
+  /// Weather is required — if it fails, the screen shows an error. Air
+  /// quality is supplementary: [AirQualityService] resolves to an
+  /// "unavailable" record instead of throwing, so a missing AQI never hides
+  /// an otherwise perfectly good forecast.
+  Future<void> _load(double lat, double lon) async {
+    final results = await (
+      _weatherService.fetchWeather(lat, lon, _locationName),
+      _aqiService.fetchAirQuality(lat, lon).catchError((Object e) {
+        debugPrint('Air quality lookup failed: $e');
+        return AirQualityData.unavailable(AqiUnavailableReason.fetchFailed);
+      }),
+    ).wait;
+
+    _weatherData = results.$1;
+    _aqiData = results.$2;
+    _state = WeatherState.loaded;
+    _errorMessage = '';
+  }
+
+  void _fail(Object e) {
+    _errorMessage = e.toString().replaceAll('Exception: ', '');
+    _state = WeatherState.error;
+  }
+
+  /// Clear search and return to the GPS location.
   Future<void> clearSearch() async {
     _isSearchMode = false;
     _searchQuery = '';
     await fetchWeatherData();
   }
 
-  /// Add a city to recent searches list (max 10, no duplicates)
+  /// Add a city to recent searches (max 10, most recent first, no dupes).
   Future<void> _addToRecentSearches(String city) async {
-    // Remove if already exists (to re-add at top)
     _recentSearches.remove(city);
     _recentSearches.insert(0, city);
 
-    // Limit to 10 entries
     if (_recentSearches.length > 10) {
       _recentSearches = _recentSearches.sublist(0, 10);
     }
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(Constants.keyRecentSearches, jsonEncode(_recentSearches));
+    await prefs.setString(
+      Constants.keyRecentSearches,
+      jsonEncode(_recentSearches),
+    );
   }
 
-  /// Remove a specific item from recent searches
+  /// Remove one entry from recent searches.
   Future<void> removeRecentSearch(String city) async {
     _recentSearches.remove(city);
     notifyListeners();
 
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.setString(Constants.keyRecentSearches, jsonEncode(_recentSearches));
+    await prefs.setString(
+      Constants.keyRecentSearches,
+      jsonEncode(_recentSearches),
+    );
   }
 
-  /// Clear all recent searches
+  /// Clear all recent searches.
   Future<void> clearRecentSearches() async {
     _recentSearches.clear();
     notifyListeners();

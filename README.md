@@ -26,7 +26,7 @@ ClearBreeze Forecast is a premium, 100% free, and open-source weather and air qu
 *   **Services**:
     *   **Location**: `Geolocator` (GPS fetching) and `Geocoding` (for coordinates lookup and address formatting).
     *   **Weather API**: [MET Norway Locationforecast 2.0 API](https://api.met.no/weatherapi/locationforecast/2.0/documentation) (requires no keys).
-    *   **Air Quality API**: [OpenAQ Platform API v3](https://docs.openaq.org) (uses optional API key, falls back to simulation mode if none is set).
+    *   **Air Quality API**: [OpenAQ Platform API v3](https://docs.openaq.org) (requires a free API key; without one the app clearly reports air quality as unavailable rather than showing placeholder values).
 
 ---
 
@@ -65,15 +65,24 @@ Make sure you have the following installed on your system:
 
 ---
 
-## 🔑 API Key Configuration (Optional)
-The application works in **Demo Mode** using simulated data if no API key is provided. To get real-world Air Quality Index (AQI) values:
+## 🔑 API Key Configuration
+Weather data needs no key. Air quality requires a free OpenAQ key — **without it the Air Quality card honestly reports that data is unavailable; the app never displays simulated or placeholder readings.**
+
 1.  Register for a free API key at [OpenAQ Platform](https://explore.openaq.org/register).
-2.  Open [lib/config/constants.dart](lib/config/constants.dart).
-3.  Replace the `openaqApiKey` placeholder with your key:
-    ```dart
-    static const String openaqApiKey = 'YOUR_KEY_HERE';
+2.  Pass the key at build time via `--dart-define` (it is read by `Constants.openaqApiKey`, so it is never committed to source):
+    ```bash
+    flutter run --dart-define=OPENAQ_API_KEY=your_key_here
     ```
-    *(Note: To keep your keys secure when publishing online, consider loading keys via environment configuration or `--dart-define` variables).*
+    ```bash
+    flutter build apk --release --dart-define=OPENAQ_API_KEY=your_key_here
+    ```
+
+### Data availability policy
+Every value on screen comes from a live API response. Where a provider does not report a metric for a given location, the UI states that explicitly instead of substituting a default:
+
+*   **Wind, humidity, pressure** — shown as *"Not available"* when MET Norway omits the field.
+*   **Rain probability** — MET Norway only publishes `probability_of_precipitation` for the Nordic region. Elsewhere the card explains this rather than estimating a percentage.
+*   **Air Quality Index** — shown only when a nearby station reports PM2.5 or PM10. Otherwise the card names the reason: no API key, no station within 25 km, no PM readings at the station, or a failed request.
 
 ---
 

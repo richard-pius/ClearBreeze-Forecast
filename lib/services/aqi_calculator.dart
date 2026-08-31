@@ -3,9 +3,16 @@ import 'dart:math';
 class AqiCalculator {
   // Interpolation formula:
   // Ip = ((IHi - ILo) / (BPHi - BPLo)) * (Cp - BPLo) + ILo
-  static int _interpolate(double cp, double bpMin, double bpMax, double iMin, double iMax) {
+  static int _interpolate(
+    double cp,
+    double bpMin,
+    double bpMax,
+    double iMin,
+    double iMax,
+  ) {
     if (bpMax == bpMin) return iMin.round();
-    final double result = ((iMax - iMin) / (bpMax - bpMin)) * (cp - bpMin) + iMin;
+    final double result =
+        ((iMax - iMin) / (bpMax - bpMin)) * (cp - bpMin) + iMin;
     return result.round();
   }
 
@@ -57,21 +64,22 @@ class AqiCalculator {
     }
   }
 
-  // Get final AQI from PM2.5 and PM10 concentrations
-  static int calculateAqi({double? pm25, double? pm10}) {
-    int aqiPm25 = 0;
-    int aqiPm10 = 0;
+  /// Final AQI from PM2.5 and PM10 concentrations.
+  ///
+  /// Returns `null` when neither pollutant was reported — a missing reading
+  /// must not be presented as an AQI of 0, which would read as pristine air.
+  static int? calculateAqi({double? pm25, double? pm10}) {
+    final int? aqiPm25 = (pm25 != null && pm25 >= 0)
+        ? calculatePm25Aqi(pm25)
+        : null;
+    final int? aqiPm10 = (pm10 != null && pm10 >= 0)
+        ? calculatePm10Aqi(pm10)
+        : null;
 
-    if (pm25 != null && pm25 >= 0) {
-      aqiPm25 = calculatePm25Aqi(pm25);
-    }
+    if (aqiPm25 == null && aqiPm10 == null) return null;
 
-    if (pm10 != null && pm10 >= 0) {
-      aqiPm10 = calculatePm10Aqi(pm10);
-    }
-
-    // Standard EPA AQI is the maximum of the calculated sub-indices
-    return max(aqiPm25, aqiPm10);
+    // Standard EPA AQI is the maximum of the available sub-indices.
+    return max(aqiPm25 ?? 0, aqiPm10 ?? 0);
   }
 
   // Get human readable category and status

@@ -49,61 +49,70 @@ class GlassmorphicCard extends StatelessWidget {
 
     // Accent sheen — pulled from accentColor if provided; otherwise a soft
     // white/blue tint. Very low opacity so it just adds depth.
-    final Color sheenColor = accentColor ??
-        (isDark ? Colors.white : const Color(0xFF60A5FA));
+    final Color sheenColor =
+        accentColor ?? (isDark ? Colors.white : const Color(0xFF60A5FA));
 
-    return DecoratedBox(
-      // Soft outer shadow to lift the card off the gradient background.
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(borderRadius),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor,
-            blurRadius: 22,
-            spreadRadius: -2,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(borderRadius),
-              // Vertical gradient gives the surface depth versus a flat fill.
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [fillTop, fillBottom],
-              ),
-              border: Border.all(color: borderColor, width: 1.0),
+    // RepaintBoundary matters here: BackdropFilter re-samples everything
+    // painted beneath it, and the home screen stacks six of these cards over
+    // an animated gradient. Isolating each one stops an unrelated repaint
+    // (a shimmer tick, the AQI gauge animating) from forcing every other
+    // card to re-blur.
+    return RepaintBoundary(
+      child: DecoratedBox(
+        // Soft outer shadow to lift the card off the gradient background.
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(borderRadius),
+          boxShadow: [
+            BoxShadow(
+              color: shadowColor,
+              blurRadius: 22,
+              spreadRadius: -2,
+              offset: const Offset(0, 8),
             ),
-            child: Stack(
-              children: [
-                // Sheen highlight — a soft radial glow at the top-left that
-                // reads as light catching the glass.
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(borderRadius),
-                        gradient: RadialGradient(
-                          center: const Alignment(-0.9, -1.1),
-                          radius: 1.4,
-                          colors: [
-                            sheenColor.withValues(alpha: isDark ? 0.10 : 0.16),
-                            sheenColor.withValues(alpha: 0.0),
-                          ],
-                          stops: const [0.0, 0.6],
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(borderRadius),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(borderRadius),
+                // Vertical gradient gives the surface depth versus a flat fill.
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [fillTop, fillBottom],
+                ),
+                border: Border.all(color: borderColor, width: 1.0),
+              ),
+              child: Stack(
+                children: [
+                  // Sheen highlight — a soft radial glow at the top-left that
+                  // reads as light catching the glass.
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(borderRadius),
+                          gradient: RadialGradient(
+                            center: const Alignment(-0.9, -1.1),
+                            radius: 1.4,
+                            colors: [
+                              sheenColor.withValues(
+                                alpha: isDark ? 0.10 : 0.16,
+                              ),
+                              sheenColor.withValues(alpha: 0.0),
+                            ],
+                            stops: const [0.0, 0.6],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Padding(padding: padding, child: child),
-              ],
+                  Padding(padding: padding, child: child),
+                ],
+              ),
             ),
           ),
         ),

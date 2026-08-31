@@ -26,8 +26,12 @@ class AboutScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bool isDark = Provider.of<ThemeProvider>(context).isDarkMode;
-    final Color primaryTextColor = isDark ? Colors.white : const Color(0xFF1E293B);
-    final Color secondaryTextColor = isDark ? Colors.white70 : const Color(0xFF475569);
+    final Color primaryTextColor = isDark
+        ? Colors.white
+        : const Color(0xFF1E293B);
+    final Color secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF475569);
     final Color mutedTextColor = isDark
         ? const Color(0x80FFFFFF)
         : const Color(0xFF64748B); // Slate 500
@@ -38,7 +42,10 @@ class AboutScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(
           'About & Attribution',
-          style: TextStyle(fontWeight: FontWeight.bold, color: primaryTextColor),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: primaryTextColor,
+          ),
         ),
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -71,19 +78,16 @@ class AboutScreen extends StatelessWidget {
                         ],
                       ),
                       child: const Center(
-                        child: Text(
-                          '💨',
-                          style: TextStyle(fontSize: 45),
-                        ),
+                        child: Text('💨', style: TextStyle(fontSize: 45)),
                       ),
                     ),
                     const SizedBox(height: 15),
                     Text(
                       'ClearBreeze Forecast',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 5),
                     Text(
@@ -99,7 +103,11 @@ class AboutScreen extends StatelessWidget {
               GlassmorphicCard(
                 child: Text(
                   'ClearBreeze Forecast is a 100% free and open-source weather and air quality monitoring app. It collects real-time meteorological forecasts and air quality parameters to protect your health and plan your day.',
-                  style: TextStyle(fontSize: 14, height: 1.4, color: secondaryTextColor),
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.4,
+                    color: secondaryTextColor,
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -111,7 +119,11 @@ class AboutScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.code_rounded, color: AppTheme.accentBlue, size: 20),
+                        const Icon(
+                          Icons.code_rounded,
+                          color: AppTheme.accentBlue,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Developer & Project Info',
@@ -150,7 +162,11 @@ class AboutScreen extends StatelessWidget {
                         'https://github.com/richard-pius/ClearBreeze-Forecast',
                         'GitHub Repository Link',
                       ),
-                      icon: const Icon(Icons.link_rounded, size: 16, color: Colors.lightBlueAccent),
+                      icon: const Icon(
+                        Icons.link_rounded,
+                        size: 16,
+                        color: Colors.lightBlueAccent,
+                      ),
                       label: const Text(
                         'github.com/richard-pius/ClearBreeze-Forecast',
                         style: TextStyle(
@@ -176,7 +192,8 @@ class AboutScreen extends StatelessWidget {
                 provider: 'MET Norway',
                 description:
                     'Weather forecasts are provided by the Norwegian Meteorological Institute (MET Norway) using their Locationforecast 2.0 API. This data is updated hourly and is globally available.',
-                licenseName: 'Creative Commons Attribution 4.0 International (CC BY 4.0)',
+                licenseName:
+                    'Creative Commons Attribution 4.0 International (CC BY 4.0)',
                 licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
                 termsUrl: 'https://api.met.no/weatherapi/terms/',
                 isDark: isDark,
@@ -219,7 +236,10 @@ class AboutScreen extends StatelessWidget {
                 icon: Icon(Icons.description_rounded, color: primaryTextColor),
                 label: Text(
                   'View Software Licenses',
-                  style: TextStyle(color: primaryTextColor, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: primaryTextColor,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isDark
@@ -247,7 +267,11 @@ class AboutScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Icon(Icons.gavel_rounded, color: Colors.amber, size: 20),
+                        const Icon(
+                          Icons.gavel_rounded,
+                          color: Colors.amber,
+                          size: 20,
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           'Disclaimer & Copyright',
@@ -301,7 +325,11 @@ class AboutScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.source_rounded, color: AppTheme.accentBlue, size: 20),
+              const Icon(
+                Icons.source_rounded,
+                color: AppTheme.accentBlue,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 title,
@@ -345,19 +373,20 @@ class AboutScreen extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             licenseName,
-            style: TextStyle(
-              fontSize: 12,
-              color: secondaryTextColor,
-            ),
+            style: TextStyle(fontSize: 12, color: secondaryTextColor),
           ),
           const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
                 child: TextButton.icon(
-                  onPressed: () => _copyToClipboard(context, licenseUrl, 'License Link'),
+                  onPressed: () =>
+                      _copyToClipboard(context, licenseUrl, 'License Link'),
                   icon: const Icon(Icons.copy_rounded, size: 14),
-                  label: const Text('License Link', style: TextStyle(fontSize: 11)),
+                  label: const Text(
+                    'License Link',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.lightBlueAccent,
                     padding: EdgeInsets.zero,
@@ -367,9 +396,13 @@ class AboutScreen extends StatelessWidget {
               ),
               Expanded(
                 child: TextButton.icon(
-                  onPressed: () => _copyToClipboard(context, termsUrl, 'API Terms Link'),
+                  onPressed: () =>
+                      _copyToClipboard(context, termsUrl, 'API Terms Link'),
                   icon: const Icon(Icons.link_rounded, size: 14),
-                  label: const Text('API Terms Link', style: TextStyle(fontSize: 11)),
+                  label: const Text(
+                    'API Terms Link',
+                    style: TextStyle(fontSize: 11),
+                  ),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.lightBlueAccent,
                     padding: EdgeInsets.zero,
