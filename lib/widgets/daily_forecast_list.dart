@@ -13,10 +13,7 @@ import 'glassmorphic_card.dart';
 class DailyForecastList extends StatelessWidget {
   final List<DailyForecast> dailyForecasts;
 
-  const DailyForecastList({
-    super.key,
-    required this.dailyForecasts,
-  });
+  const DailyForecastList({super.key, required this.dailyForecasts});
 
   @override
   Widget build(BuildContext context) {
@@ -25,16 +22,16 @@ class DailyForecastList extends StatelessWidget {
     final weatherProvider = context.watch<WeatherProvider>();
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final Color primaryColor =
-        isDark ? Colors.white : const Color(0xFF0F172A);
+    final Color primaryColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final Color secondaryColor = isDark
         ? Colors.white.withValues(alpha: 0.65)
         : const Color(0xFF475569);
     final Color trackColor = isDark
         ? Colors.white.withValues(alpha: 0.08)
         : Colors.black.withValues(alpha: 0.06);
-    final Color rainColor =
-        isDark ? Colors.lightBlueAccent : Colors.blue.shade700;
+    final Color rainColor = isDark
+        ? Colors.lightBlueAccent
+        : Colors.blue.shade700;
 
     // Compute week min/max for the range bar scale.
     double weekMin = dailyForecasts.first.tempMin;
@@ -60,8 +57,11 @@ class DailyForecastList extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_month_rounded,
-                  size: 20, color: secondaryColor),
+              Icon(
+                Icons.calendar_month_rounded,
+                size: 20,
+                color: secondaryColor,
+              ),
               const SizedBox(width: 8),
               Text(
                 '${days.length}-Day Forecast',
@@ -75,15 +75,17 @@ class DailyForecastList extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           ...days.map((day) {
-            final double tempMin =
-                weatherProvider.formatTemperature(day.tempMin);
-            final double tempMax =
-                weatherProvider.formatTemperature(day.tempMax);
+            final double tempMin = weatherProvider.formatTemperature(
+              day.tempMin,
+            );
+            final double tempMax = weatherProvider.formatTemperature(
+              day.tempMax,
+            );
             // Null when MET Norway didn't report a probability for this day;
             // the row simply omits the badge in that case.
             final int? prob = day.maxPrecipitationProbability?.round();
             return _DailyForecastRow(
-              dayName: DateFormatter.formatDayName(day.date),
+              dayName: DateFormatter.formatShortDayName(day.date),
               emoji: WeatherIconMapper.getEmoji(day.symbolCode),
               probability: prob,
               tempMin: tempMin,
@@ -148,6 +150,10 @@ class _DailyForecastRow extends StatelessWidget {
             width: 74,
             child: Text(
               dayName,
+              maxLines: 1,
+              // Guard: locales with long abbreviations (or a large system
+              // font scale) must not overflow this fixed-width column.
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -167,8 +173,11 @@ class _DailyForecastRow extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.water_drop_rounded,
-                            size: 10, color: rainColor),
+                        Icon(
+                          Icons.water_drop_rounded,
+                          size: 10,
+                          color: rainColor,
+                        ),
                         const SizedBox(width: 2),
                         Text(
                           '$probability%',

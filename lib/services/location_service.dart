@@ -11,20 +11,25 @@ class LocationService {
     // Test if location services are enabled.
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      return Future.error('Location services are disabled. Please enable GPS in settings.');
+      return Future.error(
+        'Location services are disabled. Please enable GPS in settings.',
+      );
     }
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        return Future.error('Location permission was denied. We need it to fetch your local weather.');
+        return Future.error(
+          'Location permission was denied. We need it to fetch your local weather.',
+        );
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
       return Future.error(
-          'Location permissions are permanently denied. Please enable them in your app settings.');
+        'Location permissions are permanently denied. Please enable them in your app settings.',
+      );
     }
 
     // When we reach here, permissions are granted and we can
@@ -44,7 +49,7 @@ class LocationService {
       List<Placemark> placemarks = await placemarkFromCoordinates(lat, lon);
       if (placemarks.isNotEmpty) {
         final Placemark place = placemarks.first;
-        
+
         // Locality is typically the city name. SubLocality is the district.
         final String? city = place.locality ?? place.subLocality ?? place.name;
         final String? country = place.country;
@@ -63,26 +68,32 @@ class LocationService {
   }
 
   /// Finds up to 5 matching cities for a search query by geocoding + reverse-geocoding coordinates.
-  static Future<List<Map<String, dynamic>>> getSimilarCities(String query) async {
+  static Future<List<Map<String, dynamic>>> getSimilarCities(
+    String query,
+  ) async {
     if (query.trim().isEmpty) return [];
     try {
       final List<Location> locations = await locationFromAddress(query);
       final List<Map<String, dynamic>> results = [];
-      
+
       // Limit to top 5 results to avoid hitting rate limits or slow performance
       final int limit = locations.length > 5 ? 5 : locations.length;
       for (int i = 0; i < limit; i++) {
         final Location loc = locations[i];
         try {
-          final List<Placemark> placemarks = await placemarkFromCoordinates(loc.latitude, loc.longitude);
+          final List<Placemark> placemarks = await placemarkFromCoordinates(
+            loc.latitude,
+            loc.longitude,
+          );
           if (placemarks.isNotEmpty) {
             final Placemark place = placemarks.first;
-            
+
             // Build a descriptive name
-            final String? city = place.locality ?? place.subLocality ?? place.name;
+            final String? city =
+                place.locality ?? place.subLocality ?? place.name;
             final String? adminArea = place.administrativeArea;
             final String? country = place.country;
-            
+
             String displayName = '';
             if (city != null) {
               displayName = city;
@@ -93,9 +104,10 @@ class LocationService {
                 displayName += ', $country';
               }
             } else {
-              displayName = '${loc.latitude.toStringAsFixed(3)}°, ${loc.longitude.toStringAsFixed(3)}°';
+              displayName =
+                  '${loc.latitude.toStringAsFixed(3)}°, ${loc.longitude.toStringAsFixed(3)}°';
             }
-            
+
             // Avoid duplicates
             if (!results.any((r) => r['name'] == displayName)) {
               results.add({
@@ -106,7 +118,8 @@ class LocationService {
             }
           }
         } catch (e) {
-          final String coordName = '${loc.latitude.toStringAsFixed(3)}°, ${loc.longitude.toStringAsFixed(3)}°';
+          final String coordName =
+              '${loc.latitude.toStringAsFixed(3)}°, ${loc.longitude.toStringAsFixed(3)}°';
           if (!results.any((r) => r['name'] == coordName)) {
             results.add({
               'name': coordName,

@@ -4,12 +4,12 @@ import '../providers/theme_provider.dart';
 
 /// Determines the period of day for gradient selection.
 enum DayPeriod {
-  night,     // 8 PM - 5 AM
-  dawn,      // 5 AM - 7 AM
-  morning,   // 7 AM - 11 AM
+  night, // 8 PM - 5 AM
+  dawn, // 5 AM - 7 AM
+  morning, // 7 AM - 11 AM
   afternoon, // 11 AM - 4 PM
-  golden,    // 4 PM - 6:30 PM
-  dusk,      // 6:30 PM - 8 PM
+  golden, // 4 PM - 6:30 PM
+  dusk, // 6:30 PM - 8 PM
 }
 
 class GradientBackground extends StatelessWidget {
@@ -38,9 +38,13 @@ class GradientBackground extends StatelessWidget {
   /// Gets gradient colors for DARK theme based on time-of-day and weather.
   static List<Color> _getDarkGradient(DayPeriod period, String symbolCode) {
     final String code = symbolCode.toLowerCase();
-    final bool isRainy = code.contains('rain') || code.contains('thunder') || code.contains('sleet');
+    final bool isRainy =
+        code.contains('rain') ||
+        code.contains('thunder') ||
+        code.contains('sleet');
     final bool isSnowy = code.contains('snow');
-    final bool isCloudy = code.contains('cloudy') || code.contains('partlycloudy');
+    final bool isCloudy =
+        code.contains('cloudy') || code.contains('partlycloudy');
     final bool isFoggy = code.contains('fog');
 
     // Rainy/stormy weather overrides time-of-day with moody atmosphere
@@ -127,9 +131,13 @@ class GradientBackground extends StatelessWidget {
   /// Gets gradient colors for LIGHT theme based on time-of-day and weather.
   static List<Color> _getLightGradient(DayPeriod period, String symbolCode) {
     final String code = symbolCode.toLowerCase();
-    final bool isRainy = code.contains('rain') || code.contains('thunder') || code.contains('sleet');
+    final bool isRainy =
+        code.contains('rain') ||
+        code.contains('thunder') ||
+        code.contains('sleet');
     final bool isSnowy = code.contains('snow');
-    final bool isCloudy = code.contains('cloudy') || code.contains('partlycloudy');
+    final bool isCloudy =
+        code.contains('cloudy') || code.contains('partlycloudy');
     final bool isFoggy = code.contains('fog');
 
     // Rainy weather — cool, muted palette that's still readable

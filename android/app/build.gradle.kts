@@ -14,7 +14,7 @@ if (keystorePropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.clearbreeze"
+    namespace = "com.clearbreeze.clearbreeze_forecast"
     compileSdk = 35
     ndkVersion = flutter.ndkVersion
 
@@ -24,8 +24,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.clearbreeze"
+        applicationId = "com.clearbreeze.clearbreeze_forecast"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

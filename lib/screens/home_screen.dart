@@ -57,13 +57,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     // Only the background gradient cares about symbolCode + theme, so use a
     // narrow Selector to avoid rebuilding it on every provider notification.
-    final bool isDark = context.select<ThemeProvider, bool>((t) => t.isDarkMode);
+    final bool isDark = context.select<ThemeProvider, bool>(
+      (t) => t.isDarkMode,
+    );
     final String symbolCode = context.select<WeatherProvider, String>(
       (w) => w.weatherData?.symbolCode ?? 'clearsky_day',
     );
 
-    final Color appBarTextColor =
-        isDark ? Colors.white : const Color(0xFF0F172A);
+    final Color appBarTextColor = isDark
+        ? Colors.white
+        : const Color(0xFF0F172A);
     final Color actionBgColor = isDark
         ? Colors.white.withValues(alpha: 0.10)
         : Colors.white.withValues(alpha: 0.55);
@@ -121,8 +124,7 @@ class _HomeScreenState extends State<HomeScreen> {
           builder: (context, provider, _) {
             return RefreshIndicator(
               color: const Color(0xFF3B82F6),
-              backgroundColor:
-                  isDark ? const Color(0xFF0F172A) : Colors.white,
+              backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
               onRefresh: () => provider.isSearchMode
                   ? provider.fetchWeatherForCity(provider.searchQuery)
                   : provider.fetchWeatherData(isRefresh: true),
@@ -150,8 +152,9 @@ class _HomeScreenState extends State<HomeScreen> {
         final weather = provider.weatherData!;
         final aqi = provider.aqiData!;
 
-        final Color primaryTextColor =
-            isDark ? Colors.white : const Color(0xFF0F172A);
+        final Color primaryTextColor = isDark
+            ? Colors.white
+            : const Color(0xFF0F172A);
         final Color secondaryColor = isDark
             ? Colors.white.withValues(alpha: 0.65)
             : const Color(0xFF475569);
@@ -163,10 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
         // fade-in so the loaded view feels alive without being noisy.
         final List<Widget> sections = [
           if (provider.isSearchMode)
-            _BackToLocationPill(
-              isDark: isDark,
-              onTap: provider.clearSearch,
-            ),
+            _BackToLocationPill(isDark: isDark, onTap: provider.clearSearch),
           _LocationHeader(
             greeting: _greeting(),
             locationName: provider.locationName,
@@ -212,10 +212,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildErrorView(WeatherProvider provider, bool isDark) {
-    final Color primaryTextColor =
-        isDark ? Colors.white : const Color(0xFF0F172A);
-    final Color secondaryTextColor =
-        isDark ? Colors.white70 : const Color(0xFF475569);
+    final Color primaryTextColor = isDark
+        ? Colors.white
+        : const Color(0xFF0F172A);
+    final Color secondaryTextColor = isDark
+        ? Colors.white70
+        : const Color(0xFF475569);
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -258,7 +260,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     foregroundColor: const Color(0xFF3B82F6),
                     side: const BorderSide(color: Color(0xFF3B82F6)),
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 25, vertical: 12),
+                      horizontal: 25,
+                      vertical: 12,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -273,12 +277,16 @@ class _HomeScreenState extends State<HomeScreen> {
               label: const Text(
                 'Try Again',
                 style: TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.bold),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF3B82F6),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 25,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -423,8 +431,7 @@ class _BackToLocationPill extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             onTap: onTap,
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isDark
                     ? Colors.white.withValues(alpha: 0.08)
@@ -439,8 +446,11 @@ class _BackToLocationPill extends StatelessWidget {
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.my_location_rounded,
-                      size: 16, color: Color(0xFF60A5FA)),
+                  Icon(
+                    Icons.my_location_rounded,
+                    size: 16,
+                    color: Color(0xFF60A5FA),
+                  ),
                   SizedBox(width: 6),
                   Text(
                     'Back to my location',

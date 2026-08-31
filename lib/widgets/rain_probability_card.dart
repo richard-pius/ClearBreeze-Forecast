@@ -11,10 +11,7 @@ import 'glassmorphic_card.dart';
 class RainProbabilityCard extends StatelessWidget {
   final WeatherData weatherData;
 
-  const RainProbabilityCard({
-    super.key,
-    required this.weatherData,
-  });
+  const RainProbabilityCard({super.key, required this.weatherData});
 
   /// Returns icon + color + description for the given probability tier.
   _PrecipitationVisuals _getVisuals(double probability, bool isDark) {
@@ -39,10 +36,10 @@ class RainProbabilityCard extends StatelessWidget {
     if (probability >= 15) {
       return _PrecipitationVisuals(
         icon: Icons.cloud_queue_rounded,
-        iconColor:
-            isDark ? Colors.blueGrey.shade200 : Colors.blueGrey.shade600,
-        percentColor:
-            isDark ? Colors.blueGrey.shade200 : Colors.blueGrey.shade600,
+        iconColor: isDark ? Colors.blueGrey.shade200 : Colors.blueGrey.shade600,
+        percentColor: isDark
+            ? Colors.blueGrey.shade200
+            : Colors.blueGrey.shade600,
         description: 'Slight chance of precipitation',
         gradientColors: [Colors.blueGrey, Colors.lightBlue.shade300],
       );
@@ -71,8 +68,7 @@ class RainProbabilityCard extends StatelessWidget {
     final double? probability = weatherData.precipitationProbability;
     final double? amount = weatherData.precipitation;
 
-    final Color primaryText =
-        isDark ? Colors.white : const Color(0xFF0F172A);
+    final Color primaryText = isDark ? Colors.white : const Color(0xFF0F172A);
     final Color mutedText = isDark
         ? Colors.white.withValues(alpha: 0.55)
         : const Color(0xFF64748B);
@@ -81,8 +77,7 @@ class RainProbabilityCard extends StatelessWidget {
     if (probability == null) {
       return _NotAvailableCard(
         title: 'Rain Probability',
-        message:
-            'Precipitation probability is not reported at this location.',
+        message: 'Precipitation probability is not reported at this location.',
         subMessage:
             'MET Norway only publishes probability values for the Nordic region. '
             '${amount != null ? 'Expected amount: ${amount.toStringAsFixed(1)} mm in the next hour.' : ''}',
@@ -106,9 +101,9 @@ class RainProbabilityCard extends StatelessWidget {
               Text(
                 'Rain Probability',
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontSize: 18,
-                      color: primaryText,
-                    ),
+                  fontSize: 18,
+                  color: primaryText,
+                ),
               ),
               Icon(visuals.icon, color: visuals.iconColor),
             ],
@@ -119,9 +114,9 @@ class RainProbabilityCard extends StatelessWidget {
               Text(
                 '${probability.round()}%',
                 style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: visuals.percentColor,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: visuals.percentColor,
+                ),
               ),
               const SizedBox(width: 15),
               Expanded(
@@ -131,17 +126,16 @@ class RainProbabilityCard extends StatelessWidget {
                     Text(
                       visuals.description,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: primaryText,
-                          ),
+                        fontWeight: FontWeight.w500,
+                        color: primaryText,
+                      ),
                     ),
                     if (amount != null && amount > 0)
                       Text(
                         'Expected amount: ${amount.toStringAsFixed(1)} mm',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(color: mutedText),
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: mutedText),
                       ),
                   ],
                 ),

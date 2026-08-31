@@ -5,18 +5,20 @@ import '../config/theme.dart';
 class AqiGauge extends StatefulWidget {
   final int aqi;
 
-  const AqiGauge({
-    super.key,
-    required this.aqi,
-  });
+  const AqiGauge({super.key, required this.aqi});
 
   @override
   State<AqiGauge> createState() => _AqiGaugeState();
 }
 
-class _AqiGaugeState extends State<AqiGauge> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
+class _AqiGaugeState extends State<AqiGauge>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
   late Animation<double> _animation;
+
+  // Retained so each replaced curve can be disposed; CurvedAnimation attaches
+  // a status listener to its parent controller and leaks it otherwise.
+  CurvedAnimation? _curve;
 
   @override
   void initState() {
@@ -25,15 +27,7 @@ class _AqiGaugeState extends State<AqiGauge> with SingleTickerProviderStateMixin
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-    
-    _animation = Tween<double>(
-      begin: 0.0,
-      end: widget.aqi.toDouble(),
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOutBack,
-    ));
-
+    _retarget(from: 0.0, to: widget.aqi.toDouble(), curve: Curves.easeOutBack);
     _controller.forward();
   }
 
@@ -41,19 +35,28 @@ class _AqiGaugeState extends State<AqiGauge> with SingleTickerProviderStateMixin
   void didUpdateWidget(AqiGauge oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.aqi != widget.aqi) {
-      _animation = Tween<double>(
-        begin: _animation.value,
-        end: widget.aqi.toDouble(),
-      ).animate(CurvedAnimation(
-        parent: _controller,
+      _retarget(
+        from: _animation.value,
+        to: widget.aqi.toDouble(),
         curve: Curves.easeOut,
-      ));
+      );
       _controller.forward(from: 0.0);
     }
   }
 
+  void _retarget({
+    required double from,
+    required double to,
+    required Curve curve,
+  }) {
+    _curve?.dispose();
+    _curve = CurvedAnimation(parent: _controller, curve: curve);
+    _animation = Tween<double>(begin: from, end: to).animate(_curve!);
+  }
+
   @override
   void dispose() {
+    _curve?.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -66,10 +69,7 @@ class _AqiGaugeState extends State<AqiGauge> with SingleTickerProviderStateMixin
       builder: (context, child) {
         return CustomPaint(
           size: const Size(180, 140),
-          painter: _AqiGaugePainter(
-            aqi: _animation.value,
-            isDark: isDark,
-          ),
+          painter: _AqiGaugePainter(aqi: _animation.value, isDark: isDark),
         );
       },
     );
@@ -94,7 +94,9 @@ class _AqiGaugePainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 14.0
       ..strokeCap = StrokeCap.round
-      ..color = isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08);
+      ..color = isDark
+          ? Colors.white.withValues(alpha: 0.08)
+          : Colors.black.withValues(alpha: 0.08);
 
     // Start angle is at 180 degrees (left side), sweep is a semicircle (180 deg)
     const double startAngle = math.pi;
@@ -140,13 +142,7 @@ class _AqiGaugePainter extends CustomPainter {
 
     // Draw active arc
     if (currentSweep > 0.05) {
-      canvas.drawArc(
-        arcRect,
-        startAngle,
-        currentSweep,
-        false,
-        activePaint,
-      );
+      canvas.drawArc(arcRect, startAngle, currentSweep, false, activePaint);
     }
 
     // Draw a small indicator needle/dot at the end of the arc
@@ -154,12 +150,12 @@ class _AqiGaugePainter extends CustomPainter {
     final double dotX = centerX + radius * math.cos(endAngle);
     final double dotY = centerY + radius * math.sin(endAngle);
 
-    // Indicator dot at the arc tip. In dark mode we use a white core with a
-    // deep-navy ring for contrast; in light mode we invert so the dot reads
-    // on pale sky/pastel backgrounds.
-    final Color dotCore = isDark ? Colors.white : Colors.white;
-    final Color dotRing =
-        isDark ? AppTheme.primaryDark : const Color(0xFF1E293B);
+    // Indicator dot at the arc tip: a white core ringed in deep navy so it
+    // reads against both the dark glass and the pale light-mode gradients.
+    const Color dotCore = Colors.white;
+    final Color dotRing = isDark
+        ? AppTheme.primaryDark
+        : const Color(0xFF1E293B);
 
     // Soft glow behind the dot for a premium touch.
     final Paint glow = Paint()
@@ -182,6 +178,8 @@ class _AqiGaugePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _AqiGaugePainter oldDelegate) {
-    return oldDelegate.aqi != aqi;
+    // isDark drives the track and ring colors, so a theme toggle while the
+    // gauge is idle must still trigger a repaint.
+    return oldDelegate.aqi != aqi || oldDelegate.isDark != isDark;
   }
 }

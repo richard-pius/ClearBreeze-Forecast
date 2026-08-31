@@ -12,7 +12,9 @@ class ClearBreezeApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider<WeatherProvider>(create: (_) => WeatherProvider()),
+        ChangeNotifierProvider<WeatherProvider>(
+          create: (_) => WeatherProvider(),
+        ),
         ChangeNotifierProvider<ThemeProvider>(create: (_) => ThemeProvider()),
       ],
       child: Consumer<ThemeProvider>(

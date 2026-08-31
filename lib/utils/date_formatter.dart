@@ -1,44 +1,32 @@
 import 'package:intl/intl.dart';
 
 class DateFormatter {
-  /// Formats a DateTime to show hour and AM/PM: e.g., "12:00 PM"
-  static String formatHour(DateTime dateTime) {
-    return DateFormat('h:mm a').format(dateTime.toLocal());
-  }
+  /// True when both instants fall on the same local calendar day.
+  static bool _isSameDay(DateTime a, DateTime b) =>
+      a.year == b.year && a.month == b.month && a.day == b.day;
 
-  /// Formats a DateTime to show short hour: e.g., "12 PM"
+  /// Short hour label for the hourly strip: e.g. "12 PM".
   static String formatShortHour(DateTime dateTime) {
     return DateFormat('ha').format(dateTime.toLocal());
   }
 
-  /// Formats a DateTime to show full weekday and date: e.g., "Saturday, May 23"
+  /// Full weekday and date for the hero card: e.g. "Saturday, May 23".
   static String formatFullDate(DateTime dateTime) {
     return DateFormat('EEEE, MMMM d').format(dateTime.toLocal());
   }
 
-  /// Returns "Today", "Tomorrow", or the day name (e.g., "Monday")
-  static String formatDayName(DateTime dateTime) {
+  /// Day label for the 7-day forecast: "Today", "Tomorrow", or an abbreviated
+  /// weekday such as "Wed".
+  ///
+  /// Abbreviated deliberately — full names like "Wednesday" overflow the
+  /// fixed-width day column on narrow (320dp) screens.
+  static String formatShortDayName(DateTime dateTime) {
     final DateTime now = DateTime.now();
-    final DateTime localDateTime = dateTime.toLocal();
+    final DateTime local = dateTime.toLocal();
 
-    if (localDateTime.year == now.year &&
-        localDateTime.month == now.month &&
-        localDateTime.day == now.day) {
-      return 'Today';
-    }
+    if (_isSameDay(local, now)) return 'Today';
+    if (_isSameDay(local, now.add(const Duration(days: 1)))) return 'Tomorrow';
 
-    final DateTime tomorrow = now.add(const Duration(days: 1));
-    if (localDateTime.year == tomorrow.year &&
-        localDateTime.month == tomorrow.month &&
-        localDateTime.day == tomorrow.day) {
-      return 'Tomorrow';
-    }
-
-    return DateFormat('EEEE').format(localDateTime);
-  }
-
-  /// Formats a DateTime to show last update timestamp: e.g., "Last updated: 12:45 PM"
-  static String formatLastUpdated(DateTime dateTime) {
-    return 'Last updated: ${DateFormat('h:mm a').format(dateTime.toLocal())}';
+    return DateFormat('EEE').format(local);
   }
 }

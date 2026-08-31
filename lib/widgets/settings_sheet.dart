@@ -25,11 +25,11 @@ class SettingsSheet extends StatelessWidget {
     final weatherProvider = context.watch<WeatherProvider>();
     final bool isDark = themeProvider.isDarkMode;
 
-    final Color surface =
-        isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
+    final Color surface = isDark
+        ? const Color(0xFF0F172A)
+        : const Color(0xFFF8FAFC);
     final Color primary = isDark ? Colors.white : const Color(0xFF0F172A);
-    final Color secondary =
-        isDark ? Colors.white70 : const Color(0xFF475569);
+    final Color secondary = isDark ? Colors.white70 : const Color(0xFF475569);
     final Color muted = isDark ? Colors.white38 : const Color(0xFF94A3B8);
     final Color divider = isDark ? Colors.white10 : Colors.black12;
 
@@ -85,7 +85,10 @@ class SettingsSheet extends StatelessWidget {
                   }
                 },
                 options: const [
-                  _SegmentOption(icon: Icons.light_mode_rounded, label: 'Light'),
+                  _SegmentOption(
+                    icon: Icons.light_mode_rounded,
+                    label: 'Light',
+                  ),
                   _SegmentOption(icon: Icons.dark_mode_rounded, label: 'Dark'),
                 ],
                 isDark: isDark,
@@ -120,25 +123,22 @@ class SettingsSheet extends StatelessWidget {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: (isDark ? Colors.white : Colors.black)
-                        .withValues(alpha: 0.06),
+                    color: (isDark ? Colors.white : Colors.black).withValues(
+                      alpha: 0.06,
+                    ),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(Icons.info_outline_rounded, color: primary),
                 ),
                 title: Text(
                   'About & Attribution',
-                  style: TextStyle(
-                    color: primary,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(color: primary, fontWeight: FontWeight.w600),
                 ),
                 subtitle: Text(
                   'Data sources, licenses, and credits',
                   style: TextStyle(color: secondary, fontSize: 12),
                 ),
-                trailing:
-                    Icon(Icons.chevron_right_rounded, color: secondary),
+                trailing: Icon(Icons.chevron_right_rounded, color: secondary),
                 onTap: () {
                   Navigator.of(context).pop();
                   Navigator.of(context).push(
@@ -195,13 +195,16 @@ class _SegmentedToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color trackBg = (isDark ? Colors.white : Colors.black)
-        .withValues(alpha: isDark ? 0.06 : 0.04);
-    final Color selectedBg =
-        isDark ? const Color(0xFF3B82F6) : const Color(0xFF0F172A);
+    final Color trackBg = (isDark ? Colors.white : Colors.black).withValues(
+      alpha: isDark ? 0.06 : 0.04,
+    );
+    final Color selectedBg = isDark
+        ? const Color(0xFF3B82F6)
+        : const Color(0xFF0F172A);
     final Color selectedText = Colors.white;
-    final Color unselectedText =
-        isDark ? Colors.white70 : const Color(0xFF475569);
+    final Color unselectedText = isDark
+        ? Colors.white70
+        : const Color(0xFF475569);
 
     return Container(
       padding: const EdgeInsets.all(4),

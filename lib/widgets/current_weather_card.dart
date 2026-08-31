@@ -9,15 +9,12 @@ import 'glassmorphic_card.dart';
 class CurrentWeatherCard extends StatelessWidget {
   final WeatherData weatherData;
 
-  const CurrentWeatherCard({
-    super.key,
-    required this.weatherData,
-  });
+  const CurrentWeatherCard({super.key, required this.weatherData});
 
   @override
   Widget build(BuildContext context) {
-    // We only rebuild on unit / theme changes — read once via listen: false and
-    // let the parent Consumer handle unit rebuilds.
+    // Watch: this card renders temperatures, so it must rebuild when the
+    // user flips between Celsius and Fahrenheit.
     final weatherProvider = context.watch<WeatherProvider>();
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
@@ -34,8 +31,7 @@ class CurrentWeatherCard extends StatelessWidget {
       today = weatherData.dailyForecasts.first;
     }
 
-    final Color primaryColor =
-        isDark ? Colors.white : const Color(0xFF0F172A);
+    final Color primaryColor = isDark ? Colors.white : const Color(0xFF0F172A);
     final Color secondaryColor = isDark
         ? Colors.white.withValues(alpha: 0.72)
         : const Color(0xFF475569);
@@ -81,12 +77,12 @@ class CurrentWeatherCard extends StatelessWidget {
           Text(
             tempStr,
             style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  fontSize: 96,
-                  fontWeight: FontWeight.w300,
-                  height: 1.0,
-                  letterSpacing: -3.5,
-                  color: primaryColor,
-                ),
+              fontSize: 96,
+              fontWeight: FontWeight.w300,
+              height: 1.0,
+              letterSpacing: -3.5,
+              color: primaryColor,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -158,8 +154,11 @@ class _HighLowRow extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.arrow_upward_rounded,
-              size: 15, color: Colors.orange.shade400),
+          Icon(
+            Icons.arrow_upward_rounded,
+            size: 15,
+            color: Colors.orange.shade400,
+          ),
           const SizedBox(width: 4),
           Text(
             '${tempMax.round()}°',
@@ -176,8 +175,11 @@ class _HighLowRow extends StatelessWidget {
             color: secondaryColor.withValues(alpha: 0.35),
           ),
           const SizedBox(width: 12),
-          Icon(Icons.arrow_downward_rounded,
-              size: 15, color: Colors.lightBlue.shade300),
+          Icon(
+            Icons.arrow_downward_rounded,
+            size: 15,
+            color: Colors.lightBlue.shade300,
+          ),
           const SizedBox(width: 4),
           Text(
             '${tempMin.round()}°',
